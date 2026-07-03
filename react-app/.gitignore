@@ -22,3 +22,23 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+**/node_modules/**/*
+**/dist/**/*
+
+# Environment files and secrets
+.env
+.env.local
+.env.*.local
+
+# Backend runtime / local data
+backend/.env
+backend/.env.local
+backend/.env.*.local
+backend/dist/
+backend/coverage/
+
+# OS and editor noise
+.vscode/
+.idea/
+.DS_Store
