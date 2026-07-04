@@ -1,0 +1,480 @@
+:root {
+  color-scheme: dark;
+  --space-page: 20px;
+  --page: #000000;
+  --panel: #151515;
+  --panel-deep: #0d0d0d;
+  --panel-soft: #ffffff08;
+  --control: #3b3b3b;
+  --control-hover: #484848;
+  --text: #f7f7f7;
+  --text-soft: #cfcfcf;
+  --text-muted: #8f8f93;
+  --line: rgba(255, 255, 255, 0.08);
+  --gold: #f4d23d;
+  --green: #20bd67;
+  --green-strong: #089650;
+  --red: #4c1f20;
+  --alert-red: #ff4a4a; /* Added for benchmark lows */
+  --alert-orange: #ff9800; /* Added for benchmark lows */
+  --radius-shell: 34px;
+  --radius-card: 32px; /* Adjusted to 32px as per design specs */
+  --radius-pill: 36px;
+  --shadow-soft: 0 26px 70px rgba(0, 0, 0, 0.42);
+  font-family: "Rethink Sans", system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--page);
+  color: var(--text);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: "Rethink Sans", system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+/* Added transition for smooth hover states */
+.material-symbols-outlined {
+  color: currentColor;
+  flex: 0 0 auto;
+  font-size: 25px;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  transition: font-variation-settings 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+}
+
+.material-symbols-outlined[data-filled="true"] {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* Fill icons on hover for all interactive elements automatically */
+button:hover .material-symbols-outlined:not([data-filled="true"]),
+button:active .material-symbols-outlined:not([data-filled="true"]),
+.rail-link:hover .material-symbols-outlined:not([data-filled="true"]),
+.rail-link.active .material-symbols-outlined:not([data-filled="true"]) {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.studio-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.studio-wordmark img {
+  width: 45px;
+  height: auto;
+  flex: 0 0 auto;
+}
+
+.studio-wordmark strong {
+  font-weight: 900;
+}
+
+.studio-wordmark.muted {
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 23px;
+}
+
+.studio-wordmark.muted img {
+  width: 32px;
+  margin-top: 1px;
+}
+
+.primary-button,
+.secondary-button,
+.icon-text-button,
+.icon-button,
+.success-button,
+.tool-button,
+.date-pill,
+.rail-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 51px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 500;
+  transition: background-color 150ms ease, color 150ms ease, opacity 150ms ease, transform 150ms ease;
+}
+
+.primary-button {
+  background: #ffffff;
+  color: #050505;
+  padding: 0 25px;
+}
+
+.primary-button:hover {
+  background: #ececec;
+}
+
+.secondary-button,
+.icon-text-button {
+  background: var(--control);
+  color: var(--text);
+  padding: 0 22px;
+}
+
+.secondary-button:hover,
+.icon-text-button:hover,
+.tool-button:hover,
+.date-pill:hover {
+  background: var(--control-hover);
+}
+
+.icon-button {
+  width: 46px;
+  min-height: 46px;
+  background: #313131;
+  color: var(--text-soft);
+}
+
+.icon-button:hover {
+  background: #3f3f3f;
+  color: var(--text);
+}
+
+.icon-button.danger:hover {
+  color: #ff8f8f;
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--page);
+}
+
+.login-panel {
+  width: min(100%, 460px);
+  display: grid;
+  gap: 26px;
+  padding: 34px;
+  border-radius: 32px;
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.login-panel p {
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 750;
+}
+
+.login-panel h1 {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: clamp(2.4rem, 8vw, 4rem);
+  line-height: 1;
+}
+
+.app-shell {
+  height: 100dvh;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-page);
+  overflow: hidden;
+  padding: var(--space-page);
+  background: var(--page);
+  color: var(--text);
+}
+
+.app-topbar {
+  min-height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 14px 12px 31px;
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+}
+
+.session-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 17px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.session-chip > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-chip i {
+  width: 1px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.session-chip img,
+.avatar-fallback {
+  width: 41px;
+  height: 41px;
+  border-radius: 50%;
+}
+
+.session-chip img {
+  object-fit: cover;
+}
+
+.avatar-fallback {
+  display: grid;
+  place-items: center;
+  background: #d9d9d9;
+  color: #595959;
+}
+
+.studio-layout {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 318px minmax(0, 1fr);
+  gap: var(--space-page);
+}
+
+.side-rail {
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-page);
+  overflow: hidden;
+  padding: 24px;
+  border-radius: 45px; /* Optional: adjust if rail needs to match card 32px */
+  background: var(--panel);
+}
+
+.rail-nav {
+  display: grid;
+  gap: calc(var(--space-page)/1.5);
+}
+
+.rail-link {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0 15px;
+  background: var(--control);
+  color: var(--text);
+  font-size: 15px;
+  text-align: left;
+}
+
+.rail-link .material-symbols-outlined {
+  font-size: 27px;
+}
+
+.rail-link.active {
+  background: #ffffff;
+  color: #101010;
+}
+
+.rail-link:hover:not(.active) {
+  background: var(--control-hover);
+}
+
+.rail-footer {
+  margin-top: auto;
+  display: grid;
+  gap: calc(var(--space-page)/1.5);
+}
+
+.release-card {
+  display: grid;
+  gap: 8px;
+  padding: 24px 18px 19px;
+  border-radius: 20px;
+  background: #090909;
+}
+
+.release-card > span {
+  /* padding-left: 59px; */
+  color: var(--text-muted);
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.rail-link.utility {
+  background: var(--control);
+}
+
+.rail-link.sign-out {
+  background: var(--red);
+}
+
+.workspace {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-page);
+  align-content: start;
+  overflow: hidden;
+}
+
+.workspace-header {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-page);
+}
+
+.page-title-pill {
+  width: 100%;
+  min-height: 59px;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 31px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, #ffffff12 0%, #ffffff00 100%);
+}
+
+.page-title-pill h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* --- Responsive Button Groups Logic --- */
+.date-controls,
+.invoice-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px; /* Tighter gap makes the dynamic radii visually cohesive */
+  min-width: fit-content;
+}
+
+.date-controls > button, 
+.invoice-actions > button {
+  border-radius: var(--radius-pill); /* Fallback to fully rounded if single */
+}
+
+/* Pair or More - First Item */
+.date-controls > button:first-of-type:not(:last-of-type),
+.invoice-actions > button:first-of-type:not(:last-of-type) {
+  /* Using 30px instead of 999px to prevent the browser from proportionally 
+     scaling down the 8px radius due to the large 999px value exceeding element width */
+  border-radius: 30px 8px 8px 30px;
+}
+
+/* Pair or More - Last Item */
+.date-controls > button:last-of-type:not(:first-of-type),
+.invoice-actions > button:last-of-type:not(:first-of-type) {
+  border-radius: 8px 30px 30px 8px;
+}
+
+/* Three or More - Middle Items */
+.date-controls > button:not(:first-of-type):not(:last-of-type),
+.invoice-actions > button:not(:first-of-type):not(:last-of-type) {
+  border-radius: 8px;
+}
+
+.date-pill {
+  gap: 12px;
+  min-height: 59px;
+  padding: 0 20px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 20px;
+  min-width: fit-content;
+}
+
+.date-pill span {
+  color: var(--text-muted);
+}
+
+.date-pill i {
+  width: 1px;
+  height: 27px;
+  background: rgba(255, 255, 255, 0.23);
+}
+
+.date-popup {
+  position: absolute;
+  top: calc(100% + 12px);
+  background: var(--panel-deep);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  z-index: 100;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  min-width: 220px;
+  animation: modal-slide-up 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.date-popup.from-popup {
+  right: auto;
+  left: 0;
+}
+
+.date-popup.to-popup {
+  right: 0;
+  left: auto;
+}
+
+.date-popup-row {
+  display: grid;
+  gap: 8px;
+}
