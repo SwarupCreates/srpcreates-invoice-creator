@@ -3,6 +3,8 @@ import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import './App.css'
 import letterheadLogo from './assets/LetterheadLogo.svg'
+import logoMark from './assets/LogoMark.svg'
+import signatureImage from './assets/signature.png'
 
 type UserProfile = {
   login: string
@@ -16,26 +18,152 @@ type InvoiceItem = {
   price: string
 }
 
+type ContactInfo = {
+  email: string
+  phone: string
+  website: string
+}
+
+const INVOICE_PREFIX = 'SRP'
+const COUNT_STORAGE_KEY = 'srp_invoice_counts'
 const defaultTypes = ['Static', 'Reel', 'Design', 'Consulting']
 
-function formatInvoiceNumber(date: Date) {
-  const dd = String(date.getDate()).padStart(2, '0')
-  const mm = String(date.getMonth() + 1).padStart(2, '0')
+const starterItems: InvoiceItem[] = [
+  { id: 'starter-1', description: 'JomjomatiMenu Announcement', type: 'Static', price: '2000' },
+  { id: 'starter-2', description: 'JomjomatiMenu Thank You', type: 'Static', price: '2000' },
+  { id: 'starter-3', description: 'JomjomatiMenu KV', type: 'Static', price: '1600' },
+  { id: 'starter-4', description: 'JomjomatiMenu Endslate', type: 'Reel', price: '2600' },
+  { id: 'starter-5', description: 'JomjomatiMenu Announcement', type: 'Reel', price: '2600' },
+  { id: 'starter-6', description: 'JomjomatiMenu Contest Reminder', type: 'Reel', price: '2600' },
+  { id: 'starter-7', description: 'JomjomatiMenu Winners Stories', type: 'Static', price: '2000' },
+]
+
+const bankDetails = [
+  ['ACC NAME:', 'SWARUP RANJAN PAUL'],
+  ['ACC NO.:', '50496817504'],
+  ['BANK(BRANCH):', 'INDIAN BANK, SANTOSPUR, KOLKATA, WB'],
+  ['IFSC CODE:', 'IFSC: IDIB000K771'],
+  ['UPI ID:', 'SUVO25TH@OKSBI / 9051477045'],
+  ['PAN NO.:', 'FJUPP8540N'],
+]
+
+function createItem(): InvoiceItem {
+  const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`
+  return { id, description: '', type: defaultTypes[0], price: '' }
+}
+
+function toInputDate(date: Date) {
   const yyyy = date.getFullYear()
-  return `INV-${yyyy}${mm}${dd}`
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+function getDateParts(inputDate: string) {
+  const [yyyy, mm, dd] = inputDate.split('-')
+  return { yyyy, mm, dd }
+}
+
+function formatDateToken(inputDate: string) {
+  const { yyyy, mm, dd } = getDateParts(inputDate)
+  return `${dd}${mm}${yyyy}`
+}
+
+function formatDisplayDate(inputDate: string) {
+  const { yyyy, mm, dd } = getDateParts(inputDate)
+  return `${dd}-${mm}-${yyyy}`
+}
+
+function readInvoiceCounts(): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(COUNT_STORAGE_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+function getNextInvoiceCount(inputDate: string) {
+  const counts = readInvoiceCounts()
+  return (counts[formatDateToken(inputDate)] || 0) + 1
+}
+
+function saveInvoiceCount(inputDate: string, count: number) {
+  const token = formatDateToken(inputDate)
+  const counts = readInvoiceCounts()
+  counts[token] = Math.max(counts[token] || 0, count)
+  localStorage.setItem(COUNT_STORAGE_KEY, JSON.stringify(counts))
+}
+
+function formatInvoiceNumber(inputDate: string, count: number) {
+  return `${INVOICE_PREFIX}${formatDateToken(inputDate)}-${String(count).padStart(2, '0')}`
+}
+
+function formatTotal(value: number) {
+  return value.toLocaleString('en-IN', { maximumFractionDigits: 0 })
+}
+
+function formatLineAmount(value: string) {
+  const amount = Number(value || 0)
+  return amount.toLocaleString('en-IN', { maximumFractionDigits: 0, useGrouping: false })
+}
+
+function DetailLine({ line }: { line: string }) {
+  const separatorIndex = line.indexOf(':')
+
+  if (separatorIndex > 0 && separatorIndex <= 14) {
+    return (
+      <p>
+        <strong>{line.slice(0, separatorIndex + 1)}</strong>
+        {line.slice(separatorIndex + 1)}
+      </p>
+    )
+  }
+
+  return <p>{line}</p>
+}
+
+function MailIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="1.8" />
+      <path d="m4 7 8 6 8-6" />
+    </svg>
+  )
+}
+
+function PhoneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M22 16.92v2.4a1.7 1.7 0 0 1-1.86 1.7 17.2 17.2 0 0 1-7.48-2.66 16.8 16.8 0 0 1-5.02-5.02 17.2 17.2 0 0 1-2.66-7.52A1.7 1.7 0 0 1 6.68 4h2.4a1.7 1.7 0 0 1 1.68 1.46c.11.82.3 1.62.57 2.38a1.7 1.7 0 0 1-.38 1.74l-1.02 1.02a13.6 13.6 0 0 0 5.47 5.47l1.02-1.02a1.7 1.7 0 0 1 1.74-.38c.76.27 1.56.46 2.38.57A1.7 1.7 0 0 1 22 16.92Z" />
+    </svg>
+  )
+}
+
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="7.5" />
+      <path d="M3.5 11h15M11 3.5c2 2 3 4.5 3 7.5s-1 5.5-3 7.5c-2-2-3-4.5-3-7.5s1-5.5 3-7.5Z" />
+      <path d="m17 17 3.5 3.5" />
+    </svg>
+  )
 }
 
 function App() {
+  const initialDate = toInputDate(new Date())
   const [user, setUser] = useState<UserProfile | null>(null)
-  const [invoiceDate, setInvoiceDate] = useState(() => new Date().toISOString().slice(0, 10))
-  const [invoiceNumber, setInvoiceNumber] = useState(() => formatInvoiceNumber(new Date()))
-  const [projectName, setProjectName] = useState('')
-  const [customerName, setCustomerName] = useState('')
-  const [billingAddress, setBillingAddress] = useState('')
-  const [contactInfo, setContactInfo] = useState({ email: '', phone: '', website: '' })
-  const [items, setItems] = useState<InvoiceItem[]>([])
-  const [typeOptions] = useState<string[]>(defaultTypes)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [invoiceDate, setInvoiceDate] = useState(initialDate)
+  const [invoiceCount, setInvoiceCount] = useState(() => getNextInvoiceCount(initialDate))
+  const [projectName, setProjectName] = useState('Aashirvaad Jomjomati Menu April Actuals - 2026')
+  const [customerName, setCustomerName] = useState('ICE MEDIA LAB & ANALYTICS PVT. LTD.')
+  const [billingAddress, setBillingAddress] = useState('C25, SECTOR 8, GAUTAM BUDDHA NAGAR\nNOIDA - 201301, Uttar Pradesh\nGSTIN : 09AAFCII224E`ZZ\nPAN NO. : AAFCII224E')
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    email: 'srpcreates@gmail.com',
+    phone: '9051477045',
+    website: 'srpcreates.framer.website',
+  })
+  const [items, setItems] = useState<InvoiceItem[]>(starterItems)
+  const [isExporting, setIsExporting] = useState(false)
   const previewRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -52,18 +180,19 @@ function App() {
     const avatar = params.get('avatar')
 
     if (login && avatar) {
-      const profile = { login, avatarUrl: avatar }
-      setUser(profile)
+      setUser({ login, avatarUrl: avatar })
       localStorage.setItem('gh_login', login)
       localStorage.setItem('gh_avatar', avatar)
-      window.history.replaceState({}, document.title, '/')
+      window.history.replaceState({}, document.title, window.location.pathname)
     }
   }, [])
 
   useEffect(() => {
-    setInvoiceNumber(formatInvoiceNumber(new Date(invoiceDate)))
+    setInvoiceCount(getNextInvoiceCount(invoiceDate))
   }, [invoiceDate])
 
+  const invoiceNumber = useMemo(() => formatInvoiceNumber(invoiceDate, invoiceCount), [invoiceDate, invoiceCount])
+  const billingLines = useMemo(() => billingAddress.split(/\r?\n/).filter(Boolean), [billingAddress])
   const totalAmount = useMemo(() => items.reduce((sum, item) => sum + Number(item.price || 0), 0), [items])
 
   const handleGitHubLogin = () => {
@@ -76,41 +205,66 @@ function App() {
     setUser(null)
   }
 
-  const openModal = () => setIsModalOpen(true)
-  const closeModal = () => setIsModalOpen(false)
+  const startNextInvoice = () => {
+    saveInvoiceCount(invoiceDate, invoiceCount)
+    const nextCount = getNextInvoiceCount(invoiceDate)
+    setInvoiceCount(nextCount)
+    setProjectName('')
+    setCustomerName('')
+    setBillingAddress('')
+    setItems([createItem()])
+  }
 
   const updateItem = (id: string, key: keyof InvoiceItem, value: string) => {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, [key]: value } : item)))
   }
 
   const addItem = () => {
-    setItems((prev) => [...prev, { id: Date.now().toString(), description: '', type: typeOptions[0], price: '' }])
+    setItems((prev) => [...prev, createItem()])
   }
 
-  const removeItem = (id: string) => setItems((prev) => prev.filter((item) => item.id !== id))
-
-  const previewInvoice = () => {
-    previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  const removeItem = (id: string) => {
+    setItems((prev) => (prev.length > 1 ? prev.filter((item) => item.id !== id) : [createItem()]))
   }
 
   const exportPdf = async () => {
-    if (!previewRef.current) return
-    const canvas = await html2canvas(previewRef.current, { scale: 2 })
-    const imageData = canvas.toDataURL('image/png')
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [canvas.width, canvas.height] })
-    pdf.addImage(imageData, 'PNG', 0, 0, canvas.width, canvas.height)
-    pdf.save(`${invoiceNumber}.pdf`)
+    if (!previewRef.current || isExporting) return
+
+    setIsExporting(true)
+
+    try {
+      await document.fonts?.ready
+      const canvas = await html2canvas(previewRef.current, {
+        backgroundColor: '#ffffff',
+        logging: false,
+        scale: 3,
+        useCORS: true,
+        windowHeight: previewRef.current.scrollHeight,
+        windowWidth: previewRef.current.scrollWidth,
+      })
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST')
+      pdf.save(`${invoiceNumber}.pdf`)
+      saveInvoiceCount(invoiceDate, invoiceCount)
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   if (!user) {
     return (
-      <main className="app-shell">
-        <section className="card centered-card">
-          <p className="eyebrow">Hello world, please login.</p>
-          <h1>Invoice Generator</h1>
-          <p className="subtitle">Sign in with GitHub to continue using the app.</p>
+      <main className="login-shell">
+        <section className="login-panel">
+          <img src={letterheadLogo} alt="SRP Creates" className="login-logo" />
+          <div>
+            <p className="eyebrow">Invoice Studio</p>
+            <h1>SRP Creates billing</h1>
+          </div>
           <button type="button" className="primary-button" onClick={handleGitHubLogin}>
-            <span className="material-symbols-outlined">login</span>
+            <span className="material-symbols-outlined" aria-hidden="true">login</span>
             Continue with GitHub
           </button>
         </section>
@@ -119,353 +273,243 @@ function App() {
   }
 
   return (
-    <main className="app-shell dashboard-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-icon">S</div>
-          <div>
-            <p className="brand-title">Invoice Pulse</p>
-            <p className="brand-subtitle">Clean billing workflow</p>
-          </div>
+    <main className="app-shell">
+      <aside className="side-rail">
+        <div className="rail-brand">
+          <img src={letterheadLogo} alt="SRP Creates" />
+          <span>Invoice Studio</span>
         </div>
 
-        <nav className="sidebar-nav">
-          <button type="button" className="nav-item active">
-            <span className="material-symbols-outlined">home</span>
-            Home
+        <nav className="rail-nav" aria-label="Workspace">
+          <button type="button" className="rail-link active">
+            <span className="material-symbols-outlined" aria-hidden="true">receipt_long</span>
+            Invoice
           </button>
-          <button type="button" className="nav-item">
-            <span className="material-symbols-outlined">history</span>
-            Past invoices
-          </button>
-          <button type="button" className="nav-item">
-            <span className="material-symbols-outlined">settings</span>
-            Settings
-          </button>
-          <button type="button" className="nav-item">
-            <span className="material-symbols-outlined">edit</span>
-            Edit info
+          <button type="button" className="rail-link">
+            <span className="material-symbols-outlined" aria-hidden="true">account_balance</span>
+            Payout
           </button>
         </nav>
 
-        <div className="sidebar-footer">
-          <button type="button" className="cta-button" onClick={openModal}>
-            <span className="material-symbols-outlined">add_circle</span>
-            Create invoice
-          </button>
-          <button type="button" className="secondary-button logout-button" onClick={handleLogout}>
-            <span className="material-symbols-outlined">logout</span>
-            Log out
-          </button>
-        </div>
+        <button type="button" className="profile-card" onClick={handleLogout}>
+          {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <span>{user.login.charAt(0).toUpperCase()}</span>}
+          <strong>{user.login}</strong>
+          <small>Log out</small>
+        </button>
       </aside>
 
-      <section className="main-content">
-        <header className="page-header">
+      <section className="workspace">
+        <header className="topbar">
           <div>
-            <p className="eyebrow">Welcome back, {user.login}</p>
-            <h1>Invoice dashboard</h1>
+            <p className="eyebrow">Current invoice</p>
+            <h1>{invoiceNumber}</h1>
           </div>
-          <div className="header-actions">
-            <button type="button" className="primary-button" onClick={openModal}>
-              <span className="material-symbols-outlined">add</span>
-              New invoice
+          <div className="topbar-actions">
+            <button type="button" className="secondary-button" onClick={startNextInvoice}>
+              <span className="material-symbols-outlined" aria-hidden="true">add</span>
+              New
             </button>
-            <button type="button" className="profile-pill" onClick={handleLogout}>
-              {user.avatarUrl ? <img src={user.avatarUrl} alt={user.login} /> : <span>{user.login.charAt(0).toUpperCase()}</span>}
-              <span>{user.login}</span>
+            <button type="button" className="primary-button" onClick={exportPdf} disabled={isExporting}>
+              <span className="material-symbols-outlined" aria-hidden="true">download</span>
+              {isExporting ? 'Exporting' : 'Export PDF'}
             </button>
           </div>
         </header>
 
-        <div className="hero-card">
-          <div>
-            <p className="eyebrow">Quick start</p>
-            <h2>Create a professional invoice in seconds</h2>
-            <p className="hero-copy">
-              Open the form, add your invoice details and line items, then export a clean PDF ready to share.
-            </p>
-          </div>
-          <button type="button" className="secondary-button" onClick={openModal}>
-            <span className="material-symbols-outlined">post_add</span>
-            Create invoice
-          </button>
-        </div>
-
-        <section className="content-grid">
-          <div className="content-card">
-            <div className="content-card-header">
-              <h3>Recent actions</h3>
-              <span className="material-symbols-outlined">schedule</span>
+        <div className="builder-grid">
+          <section className="editor-panel" aria-label="Invoice editor">
+            <div className="panel-heading">
+              <h2>Invoice details</h2>
+              <span>INR {formatTotal(totalAmount)}</span>
             </div>
-            <p className="content-copy">Open the invoice builder to begin. Your generated invoices will appear here once you add them.</p>
-          </div>
 
-          <div className="content-card">
-            <div className="content-card-header">
-              <h3>Billing settings</h3>
-              <span className="material-symbols-outlined">settings</span>
+            <div className="form-grid compact">
+              <label>
+                <span>Date</span>
+                <input type="date" value={invoiceDate} onChange={(event) => setInvoiceDate(event.target.value)} />
+              </label>
+              <label>
+                <span>Sequence</span>
+                <input type="text" value={String(invoiceCount).padStart(2, '0')} readOnly />
+              </label>
+              <label className="wide">
+                <span>Invoice number</span>
+                <input type="text" value={invoiceNumber} readOnly />
+              </label>
+              <label className="wide">
+                <span>Project name</span>
+                <input type="text" value={projectName} onChange={(event) => setProjectName(event.target.value)} placeholder="Project name" />
+              </label>
             </div>
-            <p className="content-copy">Update your business profile, payment details, and export preferences after invoice creation.</p>
-          </div>
-        </section>
-      </section>
 
-      {isModalOpen && (
-        <div className="modal-backdrop" onClick={closeModal}>
-          <div className="modal-panel" onClick={(event) => event.stopPropagation()}>
-            <div className="modal-header">
-              <div>
-                <p className="eyebrow">Create invoice</p>
-                <h2>New invoice details</h2>
-              </div>
-              <button type="button" className="icon-button" onClick={closeModal}>
-                <span className="material-symbols-outlined">close</span>
+            <div className="section-heading">
+              <h3>Client</h3>
+            </div>
+
+            <div className="form-grid">
+              <label className="wide">
+                <span>Bill to</span>
+                <input type="text" value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Client or company name" />
+              </label>
+              <label className="wide">
+                <span>Address and tax details</span>
+                <textarea value={billingAddress} onChange={(event) => setBillingAddress(event.target.value)} placeholder="Address, GSTIN, PAN" />
+              </label>
+            </div>
+
+            <div className="section-heading">
+              <h3>Contact bar</h3>
+            </div>
+
+            <div className="form-grid compact">
+              <label>
+                <span>Email</span>
+                <input type="email" value={contactInfo.email} onChange={(event) => setContactInfo({ ...contactInfo, email: event.target.value })} />
+              </label>
+              <label>
+                <span>Phone</span>
+                <input type="text" value={contactInfo.phone} onChange={(event) => setContactInfo({ ...contactInfo, phone: event.target.value })} />
+              </label>
+              <label className="wide">
+                <span>Website</span>
+                <input type="text" value={contactInfo.website} onChange={(event) => setContactInfo({ ...contactInfo, website: event.target.value })} />
+              </label>
+            </div>
+
+            <div className="items-toolbar">
+              <h3>Job items</h3>
+              <button type="button" className="icon-text-button" onClick={addItem}>
+                <span className="material-symbols-outlined" aria-hidden="true">add</span>
+                Add row
               </button>
             </div>
 
-            <div className="modal-form">
-              <div className="modal-grid">
-                <div className="modal-fields">
-                  <div className="field-row">
-                    <label>
-                      <span>Invoice date</span>
-                      <div className="input-icon-group">
-                        <span className="material-symbols-outlined">calendar_month</span>
-                        <input type="date" value={invoiceDate} onChange={(event) => setInvoiceDate(event.target.value)} />
-                      </div>
-                    </label>
-                    <label>
-                      <span>Invoice number</span>
-                      <div className="input-icon-group">
-                        <span className="material-symbols-outlined">badge</span>
-                        <input type="text" value={invoiceNumber} readOnly />
-                      </div>
-                    </label>
-                  </div>
+            <div className="item-editor-table">
+              <div className="item-editor-head">
+                <span>Item</span>
+                <span>Type</span>
+                <span>Price</span>
+                <span aria-hidden="true" />
+              </div>
 
-                  <div className="field-row">
-                    <label>
-                      <span>Project name</span>
-                      <div className="input-icon-group">
-                        <span className="material-symbols-outlined">work</span>
-                        <input type="text" value={projectName} onChange={(event) => setProjectName(event.target.value)} placeholder="Project or client title" />
-                      </div>
-                    </label>
-                    <label>
-                      <span>Client name</span>
-                      <div className="input-icon-group">
-                        <span className="material-symbols-outlined">person</span>
-                        <input type="text" value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Client or company" />
-                      </div>
-                    </label>
-                  </div>
+              {items.map((item) => (
+                <div key={item.id} className="item-editor-row">
+                  <input type="text" value={item.description} onChange={(event) => updateItem(item.id, 'description', event.target.value)} placeholder="Job item" />
+                  <select value={item.type} onChange={(event) => updateItem(item.id, 'type', event.target.value)}>
+                    {defaultTypes.map((typeOption) => (
+                      <option key={typeOption} value={typeOption}>{typeOption}</option>
+                    ))}
+                  </select>
+                  <input type="number" min="0" value={item.price} onChange={(event) => updateItem(item.id, 'price', event.target.value)} placeholder="0" />
+                  <button type="button" className="icon-button danger" onClick={() => removeItem(item.id)} aria-label="Remove row">
+                    <span className="material-symbols-outlined" aria-hidden="true">delete</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
 
-                  <label>
-                    <span>Billing address</span>
-                    <div className="input-icon-group textarea-group">
-                      <span className="material-symbols-outlined">location_on</span>
-                      <textarea value={billingAddress} onChange={(event) => setBillingAddress(event.target.value)} placeholder="Address, GST, city"></textarea>
+          <section className="preview-panel" aria-label="Invoice preview">
+            <div className="preview-toolbar">
+              <div>
+                <p className="eyebrow">A4 preview</p>
+                <h2>PDF output</h2>
+              </div>
+              <span>{formatDisplayDate(invoiceDate)}</span>
+            </div>
+
+            <div className="preview-scroll">
+              <div className="invoice-sheet" ref={previewRef}>
+                <header className="invoice-letterhead">
+                  <img src={letterheadLogo} alt="SRP Creates" className="invoice-logo" />
+                  <div className="invoice-designs-text">DESIGNS</div>
+                  <div className="invoice-title-block">
+                    <h2>INVOICE</h2>
+                    <p>INVOICE_NO: <span>{invoiceNumber}</span></p>
+                  </div>
+                </header>
+
+                <div className="invoice-contact-strip">
+                  <div>
+                    <MailIcon />
+                    <span>{contactInfo.email || 'srpcreates@gmail.com'}</span>
+                  </div>
+                  <div>
+                    <PhoneIcon />
+                    <span>{contactInfo.phone || '9051477045'}</span>
+                  </div>
+                  <div>
+                    <GlobeIcon />
+                    <span>{contactInfo.website || 'srpcreates.framer.website'}</span>
+                  </div>
+                </div>
+
+                <main className="invoice-body">
+                  <img src={logoMark} alt="" className="invoice-watermark" />
+
+                  <section className="invoice-bill-row">
+                    <div className="invoice-client">
+                      <p><strong>Bill To:</strong> {customerName || 'CLIENT NAME'}</p>
+                      {billingLines.length ? billingLines.map((line) => <DetailLine key={line} line={line} />) : <p>Billing address</p>}
                     </div>
-                  </label>
+                    <div className="invoice-date">DATE: {formatDisplayDate(invoiceDate)}</div>
+                  </section>
 
-                  <div className="field-row">
-                    <label>
-                      <span>Email</span>
-                      <div className="input-icon-group">
-                        <span className="material-symbols-outlined">email</span>
-                        <input type="email" value={contactInfo.email} onChange={(event) => setContactInfo({ ...contactInfo, email: event.target.value })} placeholder="example@mail.com" />
-                      </div>
-                    </label>
-                    <label>
-                      <span>Phone</span>
-                      <div className="input-icon-group">
-                        <span className="material-symbols-outlined">phone</span>
-                        <input type="text" value={contactInfo.phone} onChange={(event) => setContactInfo({ ...contactInfo, phone: event.target.value })} placeholder="+91 90000 00000" />
-                      </div>
-                    </label>
-                  </div>
+                  <section className="invoice-project">
+                    <p>Project Name:</p>
+                    <h1>{projectName || 'Project name'}</h1>
+                  </section>
 
-                  <label>
-                    <span>Website</span>
-                    <div className="input-icon-group">
-                      <span className="material-symbols-outlined">language</span>
-                      <input type="text" value={contactInfo.website} onChange={(event) => setContactInfo({ ...contactInfo, website: event.target.value })} placeholder="yourdomain.com" />
-                    </div>
-                  </label>
-
-                  <div className="section-divider">
-                    <h3>Items</h3>
-                    <button type="button" className="secondary-button" onClick={addItem}>
-                      <span className="material-symbols-outlined">add</span>
-                      Add row
-                    </button>
-                  </div>
-
-                  <div className="items-table">
-                    <div className="items-header">
-                      <span>Description</span>
+                  <section className="invoice-items">
+                    <div className="invoice-table-head">
+                      <span>Sl No.</span>
+                      <span>Job Item(s)</span>
                       <span>Type</span>
                       <span>Price</span>
-                      <span></span>
-                    </div>
-                    {items.map((item) => (
-                      <div key={item.id} className="items-row">
-                        <input type="text" value={item.description} onChange={(event) => updateItem(item.id, 'description', event.target.value)} placeholder="Enter item description" />
-                        <div className="select-wrapper">
-                          <span className="material-symbols-outlined">category</span>
-                          <select value={item.type} onChange={(event) => updateItem(item.id, 'type', event.target.value)}>
-                            {typeOptions.map((typeOption) => (
-                              <option key={typeOption} value={typeOption}>{typeOption}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="input-icon-group">
-                          <span className="material-symbols-outlined">currency_rupee</span>
-                          <input type="number" value={item.price} min="0" onChange={(event) => updateItem(item.id, 'price', event.target.value)} placeholder="0" />
-                        </div>
-                        <button type="button" className="icon-button remove-icon" onClick={() => removeItem(item.id)}>
-                          <span className="material-symbols-outlined">delete</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="field-row total-row">
-                    <div />
-                    <div className="total-label">Total</div>
-                    <div className="total-value">₹ {totalAmount.toLocaleString('en-IN')}</div>
-                  </div>
-                </div>
-
-                <div className="modal-preview">
-                  <div className="invoice-preview professional-invoice" ref={previewRef}>
-                    {/* Header Section */}
-                    <header className="inv-header">
-                      <div className="inv-header-watermark">DESIGNS</div>
-                      <div className="inv-logo-section">
-                        <img src={letterheadLogo} alt="Logo" className="inv-logo-img" />
-                      </div>
-                      <div className="inv-invoice-title">
-                        <h1>INVOICE</h1>
-                        <div className="inv-no">
-                          INVOICE_NO: <span>{invoiceNumber || 'INV-YYYYMMDD'}</span>
-                        </div>
-                      </div>
-                    </header>
-
-                    {/* Contact Bar */}
-                    <div className="inv-contact-bar">
-                      <div className="inv-contact-item">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        <span>{contactInfo.email || 'email@example.com'}</span>
-                      </div>
-                      <div className="inv-contact-item">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                        <span>{contactInfo.phone || '+91 90000 00000'}</span>
-                      </div>
-                      <div className="inv-contact-item">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                        <span>{contactInfo.website || 'yourdomain.com'}</span>
-                      </div>
+                      <span>Total Compensation</span>
                     </div>
 
-                    {/* Content */}
-                    <div className="inv-content">
-                      <div className="inv-bg-watermark">SP</div>
-
-                      {/* Billing Section */}
-                      <div className="inv-billing-section">
-                        <div className="inv-bill-to">
-                          <div><strong>Bill To:</strong> <span>{customerName || 'Client / Company Name'}</span></div>
-                          <div className="inv-billing-address">{billingAddress || 'Billing address, GST, city, state, ZIP'}</div>
-                        </div>
-                        <div className="inv-date-section">
-                          DATE: <span>{invoiceDate}</span>
-                        </div>
+                    <div className="invoice-table-body">
+                      <div className="invoice-line-items">
+                        {items.map((item, index) => (
+                          <div key={item.id} className="invoice-table-row">
+                            <span>{String(index + 1).padStart(2, '0')}</span>
+                            <span>{item.description || 'Item description'}</span>
+                            <span>{item.type}</span>
+                            <span>{formatLineAmount(item.price)}</span>
+                          </div>
+                        ))}
                       </div>
 
-                      {/* Project Section */}
-                      <div className="inv-project-section">
-                        <div className="inv-project-label">Project Name:</div>
-                        <div className="inv-project-name">{projectName || 'Project name or description'}</div>
-                      </div>
-
-                      {/* Table Section */}
-                      <div className="inv-table-container">
-                        <table className="inv-table">
-                          <thead>
-                            <tr>
-                              <th className="inv-sl-col">Sl No.</th>
-                              <th className="inv-desc-col">Job Item(s)</th>
-                              <th className="inv-type-col">Type</th>
-                              <th className="inv-price-col">Price</th>
-                              <th className="inv-total-col">Total Compensation</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {items.length ? (
-                              items.map((item, index) => (
-                                <tr key={item.id}>
-                                  <td>{String(index + 1).padStart(2, '0')}</td>
-                                  <td>{item.description || 'Item description'}</td>
-                                  <td>{item.type}</td>
-                                  <td>₹ {item.price ? Number(item.price).toLocaleString('en-IN') : '0'}</td>
-                                  {index === 0 && (
-                                    <td rowSpan={items.length} className="inv-total-compensation">
-                                      <div className="inv-total-wrapper">
-                                        <span className="inv-total-currency">INR</span>
-                                        <span className="inv-total-amount">₹ {totalAmount.toLocaleString('en-IN')}</span>
-                                      </div>
-                                    </td>
-                                  )}
-                                </tr>
-                              ))
-                            ) : (
-                              <tr>
-                                <td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8' }}>Add item rows to preview here</td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* Footer Section */}
-                      <div className="inv-footer">
-                        <div className="inv-bank-details">
-                          <div><span>ACC NAME:</span> Swarup Ranjan Paul</div>
-                          <div><span>ACC NO.:</span> 50496817504</div>
-                          <div><span>BANK(BRANCH):</span> Indian Bank, Santospur, Kolkata, WB</div>
-                          <div><span className="inv-light-text">IFSC CODE:</span> IDIB000K771</div>
-                        </div>
-                        <div className="inv-signature-section">
-                          <div className="inv-signature-image">Authorized signature</div>
-                          <div className="inv-signature-line" />
-                          <div className="inv-signature-name">Swarup Ranjan Paul</div>
-                        </div>
+                      <div className="invoice-total-lockup">
+                        <span>INR</span>
+                        <strong>{formatTotal(totalAmount)}</strong>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
+                  </section>
 
-              <div className="modal-actions">
-                <button type="button" className="secondary-button" onClick={previewInvoice}>
-                  <span className="material-symbols-outlined">visibility</span>
-                  Preview invoice
-                </button>
-                <button type="button" className="secondary-button" onClick={closeModal}>
-                  Cancel
-                </button>
-                <button type="button" className="primary-button" onClick={exportPdf}>
-                  <span className="material-symbols-outlined">file_download</span>
-                  Export PDF
-                </button>
+                  <footer className="invoice-footer">
+                    <div className="invoice-bank-details">
+                      {bankDetails.map(([label, value]) => (
+                        <p key={label}>
+                          <span>{label}</span>
+                          <strong>{value}</strong>
+                        </p>
+                      ))}
+                    </div>
+
+                    <div className="invoice-signature">
+                      <img src={signatureImage} alt="" />
+                      <div />
+                      <strong>SWARUP RANJAN PAUL</strong>
+                    </div>
+                  </footer>
+                </main>
               </div>
             </div>
-          </div>
+          </section>
         </div>
-      )}
+      </section>
     </main>
   )
 }
