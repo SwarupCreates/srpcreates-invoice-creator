@@ -43,23 +43,29 @@ const InvoiceService = {
   update: function(payload) {
     Validation.requireFields(payload.data, ['id', 'date', 'totalAmount', 'status']);
     
+    const targetId = payload.data.originalId || payload.data.id;
+    
+    // Create a copy of data without originalId for insertion
+    const updateData = { ...payload.data };
+    delete updateData.originalId;
+
     // Update main invoice
-    const success = SheetService.updateRow(Config.SHEETS.INVOICES, 'id', payload.data.id, payload.data);
+    const success = SheetService.updateRow(Config.SHEETS.INVOICES, 'id', targetId, updateData);
     
     if (!success) {
       return Response.error("Invoice not found or could not be updated", 404);
     }
     
     // If items are provided, delete all existing items and insert new ones
-    if (payload.data.items && Array.isArray(payload.data.items)) {
-      SheetService.deleteRows(Config.SHEETS.INVOICE_ITEMS, 'invoiceId', payload.data.id);
-      payload.data.items.forEach(item => {
-        item.invoiceId = payload.data.id;
+    if (updateData.items && Array.isArray(updateData.items)) {
+      SheetService.deleteRows(Config.SHEETS.INVOICE_ITEMS, 'invoiceId', targetId);
+      updateData.items.forEach(item => {
+        item.invoiceId = updateData.id; // Use the new ID for items
         SheetService.insertRow(Config.SHEETS.INVOICE_ITEMS, item);
       });
     }
 
-    return Response.success(payload.data, "Invoice updated successfully");
+    return Response.success(updateData, "Invoice updated successfully");
   },
 
   delete: function(payload) {
