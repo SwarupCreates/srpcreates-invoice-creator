@@ -57,7 +57,7 @@ function DashboardMetricCard({
       <div className="amount-panel">
         <div className="amount-lockup">
           <strong>{formatTotal(value)}</strong>
-          <span>₹ (INR)</span>
+          <span>INR</span>
         </div>
         <div className="range-track">
           <span className={`range-fill ${accent}`} style={{ width: `${progress}%` }} />
@@ -77,7 +77,7 @@ function DashboardMetricCard({
                 <StudioIcon name={itemIcon} filled />
               </span>
               <span className="metric-label">{item.label}</span>
-              <span>{formatTotal(item.amount)} ₹ (INR)</span>
+              <span>{formatTotal(item.amount)} INR</span>
             </div>
           ))
         ) : (
@@ -86,7 +86,7 @@ function DashboardMetricCard({
               <StudioIcon name="remove" />
             </span>
             <span className="metric-label">{emptyLabel}</span>
-            <span>0 ₹ (INR)</span>
+            <span>0 INR</span>
           </div>
         )}
       </div>
@@ -285,7 +285,7 @@ export function DashboardPage({
           <div className="amount-panel">
             <div className="amount-lockup">
               <strong>{formatTotal(predictedTotal)}</strong>
-              <span>₹ (INR)</span>
+              <span> INR</span>
             </div>
             <div className="range-track">
               <span className={`range-fill ${forecastAccent}`} style={{ width: `${forecastProgress}%` }} />
