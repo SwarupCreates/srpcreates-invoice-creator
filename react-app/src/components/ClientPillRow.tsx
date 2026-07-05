@@ -53,20 +53,20 @@ export function ClientPillRow({
         </div>
       </div>
 
-      <div className="pill-action">
+      <div className="pill-actions-group">
         <button 
-          className="pending-button"
+          type="button"
+          className="edit-button icon-only"
           onClick={(e) => { e.stopPropagation(); onEdit(client); }}
           title="Edit Client"
-          style={{ borderRight: 'none', borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
         >
           <StudioIcon name="edit" />
         </button>
         <button 
-          className="pending-button"
+          type="button"
+          className="delete-button icon-only"
           onClick={(e) => { e.stopPropagation(); onDelete(client.id, client.name); }}
           title="Delete Client"
-          style={{ borderLeft: '1px solid var(--border)', borderTopLeftRadius: 0, borderBottomLeftRadius: 0, color: '#ff4d4d' }}
         >
           <StudioIcon name="delete" />
         </button>

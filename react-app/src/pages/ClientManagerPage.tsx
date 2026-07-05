@@ -4,6 +4,7 @@ import { StudioIcon } from './shared';
 import type { Customer } from '../api/types';
 import { ClientPillRow } from '../components/ClientPillRow';
 import '../styles/ClientManagerPage.css';
+import '../styles/TransactionManagerPage.css';
 
 export function ClientManagerPage({ isAddClientOpen, setIsAddClientOpen }: { isAddClientOpen?: boolean, setIsAddClientOpen?: (val: boolean) => void }) {
   const { customers, isLoadingCustomers, addCustomer, updateCustomer, deleteCustomer } = useFinance();
