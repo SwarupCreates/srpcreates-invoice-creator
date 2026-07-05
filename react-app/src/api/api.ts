@@ -57,3 +57,7 @@ export const api = {
     });
   }
 };
+
+export const authApi = {
+  exchangeGithubCode: (code: string) => api.post<{ login: string, avatar_url: string }>('exchangeGithubCode', { code })
+};

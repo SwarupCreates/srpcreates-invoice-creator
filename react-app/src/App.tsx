@@ -24,6 +24,7 @@ import {
   type InvoiceItem,
   type UserProfile,
 } from './pages/shared'
+import { authApi } from './api/api'
 import { invoiceApi } from './api/invoiceApi'
 import { transactionApi } from './api/transactionApi'
 import { useFinance } from './context/FinanceContext'
@@ -104,16 +105,30 @@ function App() {
     const storedLogin = localStorage.getItem('gh_login')
     const storedAvatar = localStorage.getItem('gh_avatar')
 
-    // Check for login and avatar from Apps Script redirect
+    // Check for SPA OAuth callback code in URL
     const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
     const login = urlParams.get('login');
     const avatar = urlParams.get('avatar');
 
-    if (login && avatar) {
+    if (code) {
+      // SPA Exchange Flow: send code to Apps Script in background
+      authApi.exchangeGithubCode(code).then(res => {
+        if (res.success && res.data) {
+          localStorage.setItem('gh_login', res.data.login);
+          localStorage.setItem('gh_avatar', res.data.avatar_url);
+          setUser({ login: res.data.login, avatarUrl: res.data.avatar_url });
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          alert("GitHub login failed: " + res.message);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      });
+    } else if (login && avatar) {
+      // Legacy support just in case
       localStorage.setItem('gh_login', login);
       localStorage.setItem('gh_avatar', avatar);
       setUser({ login, avatarUrl: avatar });
-      // Remove params from URL
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (storedLogin && storedAvatar) {
       setUser({ login: storedLogin, avatarUrl: storedAvatar })
@@ -141,15 +156,14 @@ function App() {
       window.location.href = 'http://localhost:5000/api/auth/github/login'
     } else {
       const clientId = import.meta.env.VITE_PROD_GITHUB_CLIENT_ID;
-      const gasUrl = import.meta.env.VITE_APP_GAS_URL;
       
-      if (!clientId || !gasUrl || clientId.includes('your_prod_')) {
+      if (!clientId || clientId.includes('your_prod_')) {
         alert("Production GitHub OAuth is not fully configured yet! Please set VITE_PROD_GITHUB_CLIENT_ID.");
         return;
       }
 
-      // Apps Script Callback URL
-      const redirectUri = `${gasUrl}?action=githubCallback`;
+      // SPA redirect: GitHub redirects right back to the frontend URL!
+      const redirectUri = window.location.origin + window.location.pathname;
 
       const params = new URLSearchParams({
         client_id: clientId,
