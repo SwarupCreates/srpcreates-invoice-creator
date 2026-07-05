@@ -61,7 +61,7 @@ export function InvoicePillRow({
       >
         <div className="pill-segment pill-left">
           <span className={`pill-icon ${iconClass}`}>
-            <StudioIcon name="forward_to_inbox" filled />
+            <StudioIcon name={isFulfilled ? "mark_email_read" : "forward_to_inbox"} filled />
           </span>
           <span className="pill-id">{invoice.id}</span>
         </div>
