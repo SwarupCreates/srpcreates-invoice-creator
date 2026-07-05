@@ -118,10 +118,10 @@ function App() {
           localStorage.setItem('gh_login', res.data.login);
           localStorage.setItem('gh_avatar', res.data.avatar_url);
           setUser({ login: res.data.login, avatarUrl: res.data.avatar_url });
-          window.history.replaceState({}, document.title, window.location.pathname);
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
         } else {
           alert("GitHub login failed: " + res.message);
-          window.history.replaceState({}, document.title, window.location.pathname);
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
         }
       });
     } else if (login && avatar) {
@@ -129,7 +129,7 @@ function App() {
       localStorage.setItem('gh_login', login);
       localStorage.setItem('gh_avatar', avatar);
       setUser({ login, avatarUrl: avatar });
-      window.history.replaceState({}, document.title, window.location.pathname);
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
     } else if (storedLogin && storedAvatar) {
       setUser({ login: storedLogin, avatarUrl: storedAvatar })
     }
