@@ -86,8 +86,7 @@
   }
 
   .session-chip {
-    width: 100%;
-    justify-content: space-between;
+    gap: 16px;
   }
   
   .hide-mobile {

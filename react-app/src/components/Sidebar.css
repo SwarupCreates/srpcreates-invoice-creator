@@ -98,10 +98,12 @@
   }
   
   .side-rail.open {
-    max-height: 800px;
+    max-height: 85dvh;
     padding-top: 18px;
     padding-bottom: 18px;
     opacity: 1;
+    margin-bottom: var(--space-page);
+    overflow-y: auto;
   }
 
   .rail-nav {
@@ -116,7 +118,6 @@
 @media (max-width: 680px) {
   .side-rail {
     border-radius: 26px;
-    padding: 18px;
   }
 
   .rail-nav {
