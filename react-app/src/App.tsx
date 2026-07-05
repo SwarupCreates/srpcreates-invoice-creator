@@ -154,16 +154,42 @@ function App() {
       if (invToEdit) {
         setInvoiceId(invToEdit.id);
         setInvoiceDate(toInputDate(new Date(invToEdit.date)));
-        setCustomerName(invToEdit.customerName);
+        
+        const cust = customers.find(c => c.name === invToEdit.customerName);
+        if (cust) {
+          setSelectedClientId(cust.id);
+          setCustomerName(cust.name);
+          setBillingAddress(cust.address || '');
+          setContactInfo(prev => ({
+            ...prev,
+            email: cust.email || '',
+            phone: cust.phone || '',
+            pan: cust.pan || '',
+            gstin: cust.gstin || ''
+          }));
+        } else {
+          setCustomerName(invToEdit.customerName || '');
+          setSelectedClientId('NEW');
+        }
+
         setProjectName(invToEdit.projectName || '');
+        
         if (invToEdit.items && invToEdit.items.length > 0) {
           setItems(invToEdit.items);
+        } else {
+          setItems([{
+            id: `item-${Date.now()}`,
+            description: 'Work Delivered as a whole',
+            type: 'Consulting',
+            price: String(invToEdit.totalAmount || 0)
+          }]);
         }
+        
         // clear query param
         navigate('/invoice', { replace: true });
       }
     }
-  }, [location.search, invoices, navigate]);
+  }, [location.search, invoices, navigate, customers]);
 
   const billingLines = useMemo(() => billingAddress.split(/\r?\n/).filter(Boolean), [billingAddress])
   const totalAmount = useMemo(() => items.reduce((sum, item) => sum + Number(item.price || 0), 0), [items])
