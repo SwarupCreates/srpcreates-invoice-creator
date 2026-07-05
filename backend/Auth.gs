@@ -70,12 +70,13 @@ function handleGithubCallback(e) {
       <!DOCTYPE html>
       <html>
         <head>
-          <script>
-            window.location.href = "${redirectUrl}";
-          </script>
         </head>
         <body>
           <p>Redirecting to application...</p>
+          <a id="redirectLink" href="${redirectUrl}" target="_top" style="display:none;">Continue</a>
+          <script>
+            document.getElementById('redirectLink').click();
+          </script>
         </body>
       </html>
     `;
