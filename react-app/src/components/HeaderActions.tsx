@@ -58,40 +58,34 @@ export function HeaderActions({
 
   if (location.pathname === '/dashboard') {
     return (
-      <div className="date-controls" aria-label="Dashboard range" style={{ position: 'relative' }}>
-        <button type="button" className="date-pill" onClick={() => fromDateRef.current?.showPicker()}>
+      <div className="date-controls" aria-label="Dashboard range">
+        <div className="date-pill" style={{ position: 'relative', overflow: 'hidden' }}>
           <span>From</span>
           <i aria-hidden="true" />
           <StudioIcon name="calendar_month" />
           {new Date(fromDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
-        </button>
-        
-        <input
-          ref={fromDateRef}
-          type="date"
-          value={fromDate}
-          onChange={(e) => setFromDate(e.target.value)}
-          style={{ position: 'absolute', bottom: 0, left: '25%', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}
-          tabIndex={-1}
-          aria-hidden="true"
-        />
+          <input
+            ref={fromDateRef}
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+          />
+        </div>
 
-        <button type="button" className="date-pill" onClick={() => toDateRef.current?.showPicker()}>
+        <div className="date-pill" style={{ position: 'relative', overflow: 'hidden' }}>
           <span>To</span>
           <i aria-hidden="true" />
           <StudioIcon name="calendar_month" />
           {new Date(toDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
-        </button>
-        
-        <input
-          ref={toDateRef}
-          type="date"
-          value={toDate}
-          onChange={(e) => setToDate(e.target.value)}
-          style={{ position: 'absolute', bottom: 0, right: '25%', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}
-          tabIndex={-1}
-          aria-hidden="true"
-        />
+          <input
+            ref={toDateRef}
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+          />
+        </div>
       </div>
     );
   }

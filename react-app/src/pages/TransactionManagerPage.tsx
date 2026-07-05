@@ -12,6 +12,7 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
 
   const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -157,14 +158,34 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
               <StudioIcon name="calendar_month" />
               <input type="date" name="date" value={formData.date} onChange={handleInputChange} required />
             </div>
-            <div className="inline-form-group">
+            <div className="inline-form-group" style={{ position: 'relative' }}>
               <StudioIcon name="person" />
-              <input type="text" name="customerName" list="client-list" value={formData.customerName} onChange={handleInputChange} placeholder="Enter Client Name" required />
-              <datalist id="client-list">
-                {customers.map(c => (
-                  <option key={c.id} value={c.name} />
-                ))}
-              </datalist>
+              <input 
+                type="text" 
+                name="customerName" 
+                value={formData.customerName} 
+                onChange={handleInputChange} 
+                onFocus={() => setShowClientDropdown(true)}
+                onBlur={() => setTimeout(() => setShowClientDropdown(false), 200)}
+                placeholder="Enter Client Name" 
+                required 
+                autoComplete="off"
+              />
+              {showClientDropdown && customers.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--panel-deep)', border: '1px solid var(--line)', borderRadius: '12px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', marginTop: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                  {customers.filter(c => c.name.toLowerCase().includes(formData.customerName.toLowerCase())).map(c => (
+                    <div 
+                      key={c.id} 
+                      onClick={() => setFormData(prev => ({ ...prev, customerName: c.name }))}
+                      style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      {c.name}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="inline-form-group">
               <StudioIcon name="folder" />
