@@ -79,13 +79,6 @@
     border-radius: 26px;
     padding: 18px;
   }
-}
-
-@media (max-width: 680px) {
-
-  .session-chip {
-    gap: 16px;
-  }
   
   .hide-mobile {
     display: none;
@@ -93,5 +86,11 @@
   
   .mobile-menu-btn {
     display: inline-flex;
+  }
+}
+
+@media (max-width: 680px) {
+  .session-chip {
+    gap: 16px;
   }
 }
