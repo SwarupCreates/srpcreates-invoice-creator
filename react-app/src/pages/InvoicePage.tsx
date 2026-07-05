@@ -25,7 +25,8 @@ export function InvoicePage({
   onClientSelect,
   saveNewClient,
   setSaveNewClient,
-  customers
+  customers,
+  isLoading
 }: {
   invoiceDate: string
   setInvoiceDate: (value: string) => void
@@ -51,6 +52,7 @@ export function InvoicePage({
   saveNewClient: boolean
   setSaveNewClient: (value: boolean) => void
   customers: import('../api/types').Customer[]
+  isLoading?: boolean
 }) {
   const [zoom, setZoom] = useState(1)
   const previewContainerRef = useRef<HTMLDivElement>(null)
@@ -87,7 +89,13 @@ export function InvoicePage({
   }, [])
 
   return (
-    <div className="invoice-workspace">
+    <div className="invoice-workspace" style={{ position: 'relative' }}>
+      {isLoading && (
+        <div className="invoice-loading-overlay">
+          <div className="spinner"></div>
+          <p style={{ color: 'var(--text)', fontWeight: 500, fontSize: '18px' }}>Loading invoice data...</p>
+        </div>
+      )}
       <section className="editor-panel" aria-label="Invoice editor">
         <div className="panel-heading">
           <div>

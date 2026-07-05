@@ -190,7 +190,7 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
                 <button 
                   type="button" 
                   className="inline-submit-btn edit-full-btn" 
-                  onClick={() => navigate(`/invoice?edit=${editingTransactionId}`)}
+                  onClick={() => navigate(`/invoice/edit/${editingTransactionId}`)}
                   title="Edit using Invoice editor"
                   style={{ flex: 1, background: 'var(--accent)' }}
                 >

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useNavigate, matchPath } from 'react-router-dom'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import './App.css'
@@ -66,6 +66,7 @@ function App() {
   
   const [selectedClientId, setSelectedClientId] = useState('')
   const [saveNewClient, setSaveNewClient] = useState(true)
+  const [isLoadingInvoiceDetails, setIsLoadingInvoiceDetails] = useState(false)
 
   const previewRef = useRef<HTMLDivElement | null>(null)
   const location = useLocation()
@@ -147,49 +148,71 @@ function App() {
   }, [invoiceDate, invoices])
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const editId = params.get('edit');
-    if (editId && invoices && invoices.length > 0) {
-      const invToEdit = invoices.find(i => i.id === editId);
-      if (invToEdit) {
-        setInvoiceId(invToEdit.id);
-        setInvoiceDate(toInputDate(new Date(invToEdit.date)));
-        
-        const cust = customers.find(c => c.name === invToEdit.customerName);
-        if (cust) {
-          setSelectedClientId(cust.id);
-          setCustomerName(cust.name);
-          setBillingAddress(cust.address || '');
-          setContactInfo(prev => ({
-            ...prev,
-            email: cust.email || '',
-            phone: cust.phone || '',
-            pan: cust.pan || '',
-            gstin: cust.gstin || ''
-          }));
-        } else {
-          setCustomerName(invToEdit.customerName || '');
-          setSelectedClientId('NEW');
-        }
+    if (location.pathname.startsWith('/invoice')) {
+      const match = matchPath("/invoice/edit/:editId", location.pathname);
+      const editId = match?.params.editId;
+      const isFromEdit = location.state?.fromEdit;
 
-        setProjectName(invToEdit.projectName || '');
+      if (editId && invoices && invoices.length > 0) {
+        if (isFromEdit) return; // already loaded
         
-        if (invToEdit.items && invToEdit.items.length > 0) {
-          setItems(invToEdit.items);
-        } else {
-          setItems([{
-            id: `item-${Date.now()}`,
-            description: 'Work Delivered as a whole',
-            type: 'Consulting',
-            price: String(invToEdit.totalAmount || 0)
-          }]);
+        const invToEdit = invoices.find(i => i.id === editId);
+        if (invToEdit) {
+          setIsLoadingInvoiceDetails(true);
+          setInvoiceId(invToEdit.id);
+          setInvoiceDate(toInputDate(new Date(invToEdit.date)));
+          
+          const cust = customers.find(c => c.name === invToEdit.customerName);
+          if (cust) {
+            setSelectedClientId(cust.id);
+            setCustomerName(cust.name);
+            setBillingAddress(cust.address || '');
+            setContactInfo(prev => ({
+              ...prev,
+              email: cust.email || '',
+              phone: cust.phone || '',
+              pan: cust.pan || '',
+              gstin: cust.gstin || ''
+            }));
+          } else {
+            setCustomerName(invToEdit.customerName || '');
+            setSelectedClientId('NEW');
+          }
+
+          setProjectName(invToEdit.projectName || '');
+          
+          // Fetch full invoice details from backend to get items
+          invoiceApi.getById(editId).then(res => {
+            if (res.success && res.data && res.data.items && res.data.items.length > 0) {
+              setItems(res.data.items);
+            } else {
+              setItems([{
+                id: `item-${Date.now()}`,
+                description: 'Work Delivered as a whole',
+                type: 'Consulting',
+                price: String(invToEdit.totalAmount || 0)
+              }]);
+            }
+            setIsLoadingInvoiceDetails(false);
+            // clear state so it doesn't trigger a reset
+            navigate(`/invoice/edit/${editId}`, { state: { fromEdit: true }, replace: true });
+          }).catch(() => {
+            setIsLoadingInvoiceDetails(false);
+          });
         }
-        
-        // clear query param
-        navigate('/invoice', { replace: true });
+      } else if (!isFromEdit && !editId) {
+        // Reset form for "New Invoice"
+        setInvoiceId('');
+        setInvoiceDate(toInputDate(new Date()));
+        setCustomerName('');
+        setSelectedClientId('');
+        setBillingAddress('');
+        setProjectName('');
+        setContactInfo({ email: '', phone: '', website: '', pan: '', gstin: '' });
+        setItems(starterItems);
       }
     }
-  }, [location.search, invoices, navigate, customers]);
+  }, [location.pathname, location.state, invoices, navigate, customers]);
 
   const billingLines = useMemo(() => billingAddress.split(/\r?\n/).filter(Boolean), [billingAddress])
   const totalAmount = useMemo(() => items.reduce((sum, item) => sum + Number(item.price || 0), 0), [items])
@@ -392,6 +415,36 @@ function App() {
                   saveNewClient={saveNewClient}
                   setSaveNewClient={setSaveNewClient}
                   customers={customers}
+                  isLoading={isLoadingInvoiceDetails}
+                />
+              } />
+              <Route path="/invoice/edit/:editId" element={
+                <InvoicePage
+                  invoiceDate={invoiceDate}
+                  setInvoiceDate={setInvoiceDate}
+                  invoiceId={invoiceId}
+                  setInvoiceId={setInvoiceId}
+                  projectName={projectName}
+                  setProjectName={setProjectName}
+                  customerName={customerName}
+                  setCustomerName={setCustomerName}
+                  billingAddress={billingAddress}
+                  setBillingAddress={setBillingAddress}
+                  billingLines={billingLines}
+                  contactInfo={contactInfo}
+                  setContactInfo={setContactInfo}
+                  items={items}
+                  addItem={addItem}
+                  updateItem={updateItem}
+                  removeItem={removeItem}
+                  totalAmount={totalAmount}
+                  previewRef={previewRef}
+                  selectedClientId={selectedClientId}
+                  onClientSelect={handleClientSelect}
+                  saveNewClient={saveNewClient}
+                  setSaveNewClient={setSaveNewClient}
+                  customers={customers}
+                  isLoading={isLoadingInvoiceDetails}
                 />
               } />
               <Route path="/transactions" element={<TransactionManagerPage isAddRecordOpen={isAddRecordOpen} setIsAddRecordOpen={setIsAddRecordOpen} forceEditId={forceEditId} setForceEditId={setForceEditId} />} />
