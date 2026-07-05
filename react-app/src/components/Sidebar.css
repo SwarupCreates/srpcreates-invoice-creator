@@ -98,9 +98,8 @@
   }
   
   .side-rail.open {
-    max-height: calc(100dvh - 140px);
-    padding-top: 18px;
-    padding-bottom: 18px;
+    min-height: fit-content;
+    padding: 16px;
     opacity: 1;
     margin-bottom: var(--space-page);
     overflow-y: auto;
