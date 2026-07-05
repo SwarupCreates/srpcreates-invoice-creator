@@ -286,6 +286,7 @@ main.content {
   gap: var(--space-page);
   align-content: start;
   overflow: hidden;
+  position: relative;
 }
 
 .workspace-header {
