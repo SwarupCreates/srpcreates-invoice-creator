@@ -125,8 +125,8 @@ export function ClientManagerPage({ isAddClientOpen, setIsAddClientOpen }: { isA
         </section>
       </div>
 
-      <div className="pill-list-container">
-        <div className="section-label">
+      <div className="past-invoices-list-container">
+        <div className="section-label" style={{ marginBottom: '16px' }}>
           <StudioIcon name="groups" />
           <span>Saved Clients</span>
         </div>
@@ -136,15 +136,17 @@ export function ClientManagerPage({ isAddClientOpen, setIsAddClientOpen }: { isA
         ) : customers.length === 0 ? (
           <div className="empty-state">No clients found. Add one to get started!</div>
         ) : (
-          <div className="pill-list">
-            {customers.map(client => (
-              <ClientPillRow 
-                key={client.id} 
-                client={client} 
-                onEdit={openEdit} 
-                onDelete={handleDelete} 
-              />
-            ))}
+          <div className="pill-list-container">
+            <div className="pill-list">
+              {customers.map(client => (
+                <ClientPillRow 
+                  key={client.id} 
+                  client={client} 
+                  onEdit={openEdit} 
+                  onDelete={handleDelete} 
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
