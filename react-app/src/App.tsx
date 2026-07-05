@@ -137,10 +137,9 @@ function App() {
     }
   }, [])
 
-  const isEditing = location.pathname.startsWith('/invoice/edit')
 
   useEffect(() => {
-    if (invoices && !isEditing) {
+    if (invoices) {
       setInvoiceId(prev => {
         if (prev === '' || prev.startsWith('SPR')) {
           return formatInvoiceNumber(invoiceDate, getNextInvoiceCount(invoiceDate, invoices));
@@ -148,7 +147,7 @@ function App() {
         return prev;
       });
     }
-  }, [invoiceDate, invoices, isEditing])
+  }, [invoiceDate, invoices])
 
   useEffect(() => {
     if (location.pathname.startsWith('/invoice')) {
@@ -289,6 +288,9 @@ function App() {
       }
 
       const isEditingMode = location.pathname.startsWith('/invoice/edit')
+      const match = matchPath("/invoice/edit/:editId", location.pathname);
+      const originalId = match?.params.editId;
+
       const payload = {
         id: invoiceId,
         date: invoiceDate,
@@ -296,21 +298,19 @@ function App() {
         projectName: projectName,
         totalAmount: totalAmount,
         status: 'Pending',
-        items: items.map(item => ({ ...item, invoiceId: isEditingMode ? (matchPath("/invoice/edit/:editId", location.pathname)?.params.editId || invoiceId) : invoiceId }))
+        items: items.map(item => ({ ...item, invoiceId: invoiceId }))
       }
 
       if (isEditingMode) {
-        const match = matchPath("/invoice/edit/:editId", location.pathname);
-        const originalId = match?.params.editId;
         
         // Find existing status from invoices list to prevent overwriting to 'Pending' if it was 'Fulfilled'
         const existingInv = invoices.find(i => i.id === (originalId || invoiceId))
         if (existingInv && existingInv.status) {
           payload.status = existingInv.status
         }
-        // Always enforce the original ID in edit mode to prevent DB lookup failures
+        // Pass originalId to backend so it can find the row if the ID was changed
         if (originalId) {
-          payload.id = originalId;
+          (payload as any).originalId = originalId;
         }
         const res = await invoiceApi.update(payload)
         if (!res.success) throw new Error(res.message || "Failed to update invoice in database")
@@ -333,6 +333,10 @@ function App() {
 
       // Refresh list if applicable
       await refreshInvoices()
+
+      if (isEditingMode && originalId && invoiceId !== originalId) {
+        navigate(`/invoice/edit/${invoiceId}`, { replace: true })
+      }
     } catch (error: any) {
       console.error("Failed to save invoice to db:", error)
       alert(`Error saving invoice: ${error.message}`)
