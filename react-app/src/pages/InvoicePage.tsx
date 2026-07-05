@@ -179,29 +179,8 @@ export function InvoicePage({
                 <span style={{ margin: 0, textTransform: 'none', color: 'var(--text)' }}>Save client information</span>
               </label>
             </div>
-            
-            <div className="section-heading">
-              <h3>Contact bar</h3>
-            </div>
-
-            <div className="form-grid compact">
-              <label>
-                <span>Email</span>
-                <input type="email" value={contactInfo.email} onChange={(event) => setContactInfo({ ...contactInfo, email: event.target.value })} />
-              </label>
-              <label>
-                <span>Phone</span>
-                <input type="text" value={contactInfo.phone} onChange={(event) => setContactInfo({ ...contactInfo, phone: event.target.value })} />
-              </label>
-              <label className="wide">
-                <span>Website</span>
-                <input type="text" value={contactInfo.website} onChange={(event) => setContactInfo({ ...contactInfo, website: event.target.value })} />
-              </label>
-            </div>
           </>
         )}
-
-
 
         <div className="items-toolbar">
           <h3>Job items</h3>
@@ -262,24 +241,18 @@ export function InvoicePage({
             </header>
 
             <div className="invoice-contact-strip">
-              {contactInfo.email !== 'NIL' && (
-                <div>
-                  <MailIcon />
-                  <span>{contactInfo.email || 'srpcreates@gmail.com'}</span>
-                </div>
-              )}
-              {contactInfo.phone !== 'NIL' && (
-                <div>
-                  <PhoneIcon />
-                  <span>{contactInfo.phone || '9051477045'}</span>
-                </div>
-              )}
-              {contactInfo.website !== 'NIL' && (
-                <div>
-                  <GlobeIcon />
-                  <span>{contactInfo.website || 'srpcreates.framer.website'}</span>
-                </div>
-              )}
+              <div>
+                <MailIcon />
+                <span>srpcreates@gmail.com</span>
+              </div>
+              <div>
+                <PhoneIcon />
+                <span>9051477045</span>
+              </div>
+              <div>
+                <GlobeIcon />
+                <span>srpcreates.framer.website</span>
+              </div>
             </div>
 
             <main className="invoice-body">
@@ -293,6 +266,7 @@ export function InvoicePage({
                   {billingLines.length ? billingLines.filter(line => line !== 'NIL').map((line) => <DetailLine key={line} line={line} />) : <p>Billing address</p>}
                   {contactInfo.gstin && contactInfo.gstin !== 'NIL' && <DetailLine key="gstin" line={`GSTIN: ${contactInfo.gstin}`} />}
                   {contactInfo.pan && contactInfo.pan !== 'NIL' && <DetailLine key="pan" line={`PAN NO.: ${contactInfo.pan}`} />}
+                  {contactInfo.email && contactInfo.email !== 'NIL' && <DetailLine key="email" line={`Email: ${contactInfo.email}`} />}
                 </div>
                 <div className="invoice-date">DATE: {formatDisplayDate(invoiceDate)}</div>
               </section>
