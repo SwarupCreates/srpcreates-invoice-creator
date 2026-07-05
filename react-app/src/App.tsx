@@ -137,8 +137,10 @@ function App() {
     }
   }, [])
 
+  const isEditing = location.pathname.startsWith('/invoice/edit')
+
   useEffect(() => {
-    if (invoices) {
+    if (invoices && !isEditing) {
       setInvoiceId(prev => {
         if (prev === '' || prev.startsWith('SPR')) {
           return formatInvoiceNumber(invoiceDate, getNextInvoiceCount(invoiceDate, invoices));
@@ -146,7 +148,7 @@ function App() {
         return prev;
       });
     }
-  }, [invoiceDate, invoices])
+  }, [invoiceDate, invoices, isEditing])
 
   useEffect(() => {
     if (location.pathname.startsWith('/invoice')) {
@@ -286,7 +288,7 @@ function App() {
         })
       }
 
-      const isEditing = location.pathname.startsWith('/invoice/edit')
+      const isEditingMode = location.pathname.startsWith('/invoice/edit')
       const payload = {
         id: invoiceId,
         date: invoiceDate,
@@ -294,22 +296,31 @@ function App() {
         projectName: projectName,
         totalAmount: totalAmount,
         status: 'Pending',
-        items: items.map(item => ({ ...item, invoiceId: invoiceId }))
+        items: items.map(item => ({ ...item, invoiceId: isEditingMode ? (matchPath("/invoice/edit/:editId", location.pathname)?.params.editId || invoiceId) : invoiceId }))
       }
 
-      if (isEditing) {
+      if (isEditingMode) {
+        const match = matchPath("/invoice/edit/:editId", location.pathname);
+        const originalId = match?.params.editId;
+        
         // Find existing status from invoices list to prevent overwriting to 'Pending' if it was 'Fulfilled'
-        const existingInv = invoices.find(i => i.id === invoiceId)
+        const existingInv = invoices.find(i => i.id === (originalId || invoiceId))
         if (existingInv && existingInv.status) {
           payload.status = existingInv.status
         }
-        await invoiceApi.update(payload)
+        // Always enforce the original ID in edit mode to prevent DB lookup failures
+        if (originalId) {
+          payload.id = originalId;
+        }
+        const res = await invoiceApi.update(payload)
+        if (!res.success) throw new Error(res.message || "Failed to update invoice in database")
       } else {
         // Create backend entry for the invoice
-        await invoiceApi.create(payload)
+        const res = await invoiceApi.create(payload)
+        if (!res.success) throw new Error(res.message || "Failed to create invoice in database")
 
         // Generate a distinct transaction record as requested
-        await transactionApi.create({
+        const txnRes = await transactionApi.create({
           id: `TXN-${invoiceId}`,
           date: invoiceDate,
           amount: totalAmount,
@@ -317,12 +328,14 @@ function App() {
           category: 'Invoice',
           description: `Invoice ${invoiceId} for ${projectName || customerName}`
         })
+        if (!txnRes.success) console.error("Failed to create transaction record:", txnRes.message)
       }
 
       // Refresh list if applicable
       await refreshInvoices()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save invoice to db:", error)
+      alert(`Error saving invoice: ${error.message}`)
       throw error // to prevent exporting if save fails
     } finally {
       setIsSaving(false)
