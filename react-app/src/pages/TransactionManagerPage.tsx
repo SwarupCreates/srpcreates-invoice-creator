@@ -6,8 +6,8 @@ import { InvoicePillRow } from '../components/InvoicePillRow';
 import { useNavigate } from 'react-router-dom';
 import '../styles/TransactionManagerPage.css';
 
-export function TransactionManagerPage({ isAddRecordOpen, forceEditId, setForceEditId }: { isAddRecordOpen?: boolean, forceEditId?: string, setForceEditId?: (id: string) => void }) {
-  const { invoices, isLoadingInvoices, markInvoicePaid, markInvoicePending, addInvoice, updateInvoice, deleteInvoice } = useFinance();
+export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, forceEditId, setForceEditId }: { isAddRecordOpen?: boolean, setIsAddRecordOpen?: (v: boolean) => void, forceEditId?: string, setForceEditId?: (id: string) => void }) {
+  const { invoices, isLoadingInvoices, markInvoicePaid, markInvoicePending, addInvoice, updateInvoice, deleteInvoice, customers } = useFinance();
   const navigate = useNavigate();
 
   const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
@@ -53,17 +53,28 @@ export function TransactionManagerPage({ isAddRecordOpen, forceEditId, setForceE
     await markInvoicePending(id);
   };
 
-  const handleEditClick = (id: string) => {
-    const inv = invoices.find(i => i.id === id);
-    if (inv) {
-      setEditingTransactionId(id);
+  const handleEditClick = (inv: any) => {
+    // If inv is a string (e.g. from forceEditId), fall back to finding by ID
+    let targetInv = inv;
+    if (typeof inv === 'string') {
+      targetInv = invoices.find(i => i.id === inv);
+    }
+    
+    if (targetInv) {
+      setEditingTransactionId(targetInv.id);
+      setIsAddRecordOpen?.(true);
+      
+      const clientStr = ('client' in targetInv ? targetInv.client : ('customerName' in targetInv ? targetInv.customerName : ''));
+      const projectStr = ('project' in targetInv ? targetInv.project : targetInv.projectName) || '';
+      const amount = 'amount' in targetInv ? targetInv.amount : targetInv.totalAmount;
+      
       setFormData({
-        id: inv.id,
-        date: toInputDate(new Date(inv.date)),
-        customerName: inv.customerName,
-        projectName: inv.projectName || '',
-        totalAmount: String(inv.totalAmount),
-        status: inv.status
+        id: targetInv.id,
+        date: toInputDate(new Date(targetInv.date || new Date())),
+        customerName: clientStr,
+        projectName: projectStr,
+        totalAmount: String(amount),
+        status: targetInv.status || 'Pending'
       });
     }
   };
@@ -148,7 +159,12 @@ export function TransactionManagerPage({ isAddRecordOpen, forceEditId, setForceE
             </div>
             <div className="inline-form-group">
               <StudioIcon name="person" />
-              <input type="text" name="customerName" value={formData.customerName} onChange={handleInputChange} placeholder="Enter Client Name" required />
+              <input type="text" name="customerName" list="client-list" value={formData.customerName} onChange={handleInputChange} placeholder="Enter Client Name" required />
+              <datalist id="client-list">
+                {customers.map(c => (
+                  <option key={c.id} value={c.name} />
+                ))}
+              </datalist>
             </div>
             <div className="inline-form-group">
               <StudioIcon name="folder" />

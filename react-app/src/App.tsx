@@ -368,7 +368,7 @@ function App() {
                   customers={customers}
                 />
               } />
-              <Route path="/transactions" element={<TransactionManagerPage isAddRecordOpen={isAddRecordOpen} forceEditId={forceEditId} setForceEditId={setForceEditId} />} />
+              <Route path="/transactions" element={<TransactionManagerPage isAddRecordOpen={isAddRecordOpen} setIsAddRecordOpen={setIsAddRecordOpen} forceEditId={forceEditId} setForceEditId={setForceEditId} />} />
               <Route path="/clients" element={<ClientManagerPage isAddClientOpen={isAddClientOpen} setIsAddClientOpen={setIsAddClientOpen} />} />
             </Routes>
           </div>

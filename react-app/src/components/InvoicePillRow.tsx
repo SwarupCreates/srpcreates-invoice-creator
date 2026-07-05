@@ -14,7 +14,7 @@ export function InvoicePillRow({
   invoice: Invoice | { id: string, date?: string, projectName?: string, customerName?: string, totalAmount: number | string, status: string, project?: string, amount?: number | string, client?: string };
   onMarkFulfilled?: (id: string) => void;
   onMarkPending?: (id: string) => void;
-  onEdit?: (id: string) => void;
+  onEdit?: (invoice: any) => void;
   onDelete?: (id: string) => void;
   onClick?: (id: string) => void;
 }) {
@@ -93,7 +93,7 @@ export function InvoicePillRow({
         )}
 
         {onEdit && (
-          <button type="button" className="edit-button icon-only" onClick={(e) => { e.stopPropagation(); onEdit(invoice.id); }} title="Edit transaction">
+          <button type="button" className="edit-button icon-only" onClick={(e) => { e.stopPropagation(); onEdit(invoice); }} title="Edit transaction">
             <StudioIcon name="edit" />
           </button>
         )}
