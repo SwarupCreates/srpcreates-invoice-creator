@@ -2,15 +2,16 @@ import { NavLink } from 'react-router-dom';
 import { FinanceStudioWordmark, StudioIcon, navItems, financeLogoWhite } from '../pages/shared';
 import './Sidebar.css';
 
-export function Sidebar({ onLogout }: { onLogout: () => void }) {
+export function Sidebar({ isOpen, onClose, onLogout }: { isOpen?: boolean, onClose?: () => void, onLogout: () => void }) {
   return (
-    <aside className="side-rail">
+    <aside className={`side-rail ${isOpen ? 'open' : ''}`}>
       <nav className="rail-nav" aria-label="Workspace">
         {navItems.map((item) => (
           <NavLink
             key={item.id}
             to={item.path}
             className={({ isActive }) => `rail-link${isActive ? ' active' : ''}`}
+            onClick={() => onClose && onClose()}
           >
             <StudioIcon name={item.icon} />
             {item.label}
@@ -24,7 +25,7 @@ export function Sidebar({ onLogout }: { onLogout: () => void }) {
           <span>release-v1.0</span>
         </div>
 
-        <button type="button" className="rail-link utility">
+        <button type="button" className="rail-link utility" onClick={() => onClose && onClose()}>
           <StudioIcon name="account_circle" />
           Account Manager
         </button>

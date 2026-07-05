@@ -62,6 +62,7 @@ function App() {
 
   const [isAddRecordOpen, setIsAddRecordOpen] = useState(false)
   const [isAddClientOpen, setIsAddClientOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   
@@ -398,10 +399,13 @@ function App() {
 
   return (
     <main className="app-shell">
-      <TopNav user={user} />
+      <TopNav user={user} onToggleSidebar={() => setIsSidebarOpen(prev => !prev)} />
 
       <div className="studio-layout">
-        <Sidebar onLogout={handleLogout} />
+        {isSidebarOpen && (
+          <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
+        )}
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onLogout={handleLogout} />
 
         <section className="workspace">
           <header className="workspace-header">

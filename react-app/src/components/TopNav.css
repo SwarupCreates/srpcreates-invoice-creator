@@ -51,6 +51,22 @@
   color: #595959;
 }
 
+.mobile-menu-btn {
+  display: none;
+  background: transparent;
+  color: var(--text);
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-pill);
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-menu-btn:hover {
+  background: var(--panel-deep);
+}
+
 @media (max-width: 980px) {
   .app-topbar {
     align-items: flex-start;
@@ -67,5 +83,13 @@
   .session-chip {
     width: 100%;
     justify-content: space-between;
+  }
+  
+  .hide-mobile {
+    display: none;
+  }
+  
+  .mobile-menu-btn {
+    display: inline-flex;
   }
 }
