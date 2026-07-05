@@ -304,8 +304,8 @@ function App() {
         })
       }
 
-      // Create backend entry for the invoice
-      await invoiceApi.create({
+      const isEditing = location.pathname.startsWith('/invoice/edit')
+      const payload = {
         id: invoiceId,
         date: invoiceDate,
         customerName: customerName,
@@ -313,17 +313,29 @@ function App() {
         totalAmount: totalAmount,
         status: 'Pending',
         items: items.map(item => ({ ...item, invoiceId: invoiceId }))
-      })
+      }
 
-      // Generate a distinct transaction record as requested
-      await transactionApi.create({
-        id: `TXN-${invoiceId}`,
-        date: invoiceDate,
-        amount: totalAmount,
-        type: 'Income',
-        category: 'Invoice',
-        description: `Invoice ${invoiceId} for ${projectName || customerName}`
-      })
+      if (isEditing) {
+        // Find existing status from invoices list to prevent overwriting to 'Pending' if it was 'Fulfilled'
+        const existingInv = invoices.find(i => i.id === invoiceId)
+        if (existingInv && existingInv.status) {
+          payload.status = existingInv.status
+        }
+        await invoiceApi.update(payload)
+      } else {
+        // Create backend entry for the invoice
+        await invoiceApi.create(payload)
+
+        // Generate a distinct transaction record as requested
+        await transactionApi.create({
+          id: `TXN-${invoiceId}`,
+          date: invoiceDate,
+          amount: totalAmount,
+          type: 'Income',
+          category: 'Invoice',
+          description: `Invoice ${invoiceId} for ${projectName || customerName}`
+        })
+      }
 
       // Refresh list if applicable
       await refreshInvoices()

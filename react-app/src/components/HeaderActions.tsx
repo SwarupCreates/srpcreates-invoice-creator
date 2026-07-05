@@ -92,7 +92,8 @@ export function HeaderActions({
     );
   }
 
-  if (location.pathname === '/invoice') {
+  if (location.pathname.startsWith('/invoice')) {
+    const isEditing = location.pathname.startsWith('/invoice/edit');
     return (
       <div className="invoice-actions">
         <button type="button" className="secondary-button" onClick={startNextInvoice}>
@@ -100,8 +101,8 @@ export function HeaderActions({
           New
         </button>
         <button type="button" className="primary-button" onClick={exportPdf} disabled={isExporting}>
-          <StudioIcon name="download" />
-          {isExporting ? 'Exporting' : 'Upload & Export PDF'}
+          <StudioIcon name={isEditing ? "save" : "download"} />
+          {isExporting ? (isEditing ? 'Saving & Exporting' : 'Exporting') : (isEditing ? 'Save & Export PDF' : 'Upload & Export PDF')}
         </button>
       </div>
     );

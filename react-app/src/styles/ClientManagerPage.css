@@ -104,9 +104,9 @@
 /* Pill list styles */
 .pill-list-container {
   flex: 1;
-  background: var(--panel-deep);
-  border-radius: var(--radius-card);
-  padding: 24px;
+  /* background: var(--panel-deep); */
+  border-radius: calc(var(--radius-card)/1.5);
+  padding-left: 4px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -132,7 +132,8 @@
   gap: 12px;
   overflow-y: auto;
   flex: 1;
-  padding-right: 8px; /* For scrollbar */
+  margin-right: -12px; /* For scrollbar */
+  padding-right: 12px;
 }
 
 /* Hide scrollbar */
