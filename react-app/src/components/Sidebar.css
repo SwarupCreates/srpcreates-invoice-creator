@@ -91,7 +91,7 @@
     z-index: 1000;
     transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.4s ease, opacity 0.4s ease;
     border-radius: 26px;
-    background: #000000;
+    background: var(--panel);
     padding-top: 0;
     padding-bottom: 0;
     opacity: 0;

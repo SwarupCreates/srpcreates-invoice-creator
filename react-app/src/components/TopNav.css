@@ -76,14 +76,12 @@
   .app-topbar {
     align-items: center;
     flex-direction: row;
+    border-radius: 26px;
+    padding: 18px;
   }
 }
 
 @media (max-width: 680px) {
-  .app-topbar {
-    border-radius: 26px;
-    padding: 18px;
-  }
 
   .session-chip {
     gap: 16px;
