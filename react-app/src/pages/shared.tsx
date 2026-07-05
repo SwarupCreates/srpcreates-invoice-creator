@@ -5,6 +5,8 @@ import signatureImage from '../assets/signature.png'
 import financeLogoColor from '../assets/icons/FinanceStudioColorLogoMark.svg'
 import financeLogoWhite from '../assets/icons/FinanceStudioWhiteLogoMark.svg'
 
+export { financeLogoColor, financeLogoWhite }
+
 export type UserProfile = {
   login: string
   avatarUrl: string

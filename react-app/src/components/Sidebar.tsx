@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { FinanceStudioWordmark, StudioIcon, navItems } from '../pages/shared';
+import { FinanceStudioWordmark, StudioIcon, navItems, financeLogoWhite } from '../pages/shared';
 import './Sidebar.css';
 
 export function Sidebar({ onLogout }: { onLogout: () => void }) {
@@ -20,7 +20,7 @@ export function Sidebar({ onLogout }: { onLogout: () => void }) {
 
       <div className="rail-footer">
         <div className="release-card">
-          <FinanceStudioWordmark mark="/src/assets/icons/FinanceStudioWhiteLogoMark.svg" muted />
+          <FinanceStudioWordmark mark={financeLogoWhite} muted />
           <span>release-v1.0</span>
         </div>
 
