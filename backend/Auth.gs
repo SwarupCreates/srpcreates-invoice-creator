@@ -3,7 +3,7 @@
  */
 
 function exchangeGithubCode(payload) {
-  const code = payload.code;
+  const code = payload.data ? payload.data.code : null;
   
   if (!code) {
     return Response.error('Missing GitHub code', 400);
