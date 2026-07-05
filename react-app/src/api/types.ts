@@ -4,7 +4,7 @@ export type Invoice = {
   customerName: string;
   projectName: string;
   totalAmount: number;
-  status: 'Pending' | 'Cancelled' | 'Fulfilled';
+  status: 'Pending' | 'Cancelled' | 'Fulfilled' | 'Paid' | 'Sent' | 'Overdue' | string;
   items?: InvoiceItem[];
 };
 

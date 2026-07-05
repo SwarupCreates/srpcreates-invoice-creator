@@ -10,6 +10,8 @@ function doGet(e) {
     // if (!Utils.verifyAuth(e)) return Response.error('Unauthorized', 401);
 
     switch (action) {
+      case 'githubCallback':
+        return handleGithubCallback(e);
       case 'getDashboard':
         return DashboardService.getSummary(e);
       case 'getInvoices':

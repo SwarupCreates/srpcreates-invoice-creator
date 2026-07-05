@@ -1,5 +1,4 @@
 import { useFinance } from '../context/FinanceContext';
-import { StudioIcon } from './shared';
 import '../styles/TransactionTrackerPage.css';
 
 export function TransactionTrackerPage() {

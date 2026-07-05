@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import type { Invoice, Customer } from '../api/types';
 import { invoiceApi } from '../api/invoiceApi';
 import { customerApi } from '../api/customerApi';

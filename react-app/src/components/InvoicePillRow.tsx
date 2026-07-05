@@ -9,7 +9,7 @@ export function InvoicePillRow({
   onMarkPending,
   onClick 
 }: { 
-  invoice: Invoice | { id: string, projectName?: string, customerName?: string, totalAmount: number | string, status: string, project?: string, amount?: number | string, client?: string };
+  invoice: Invoice | { id: string, date?: string, projectName?: string, customerName?: string, totalAmount: number | string, status: string, project?: string, amount?: number | string, client?: string };
   onMarkFulfilled?: (id: string) => void;
   onMarkPending?: (id: string) => void;
   onClick?: (id: string) => void;

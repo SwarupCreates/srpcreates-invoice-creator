@@ -104,20 +104,19 @@ function App() {
     const storedLogin = localStorage.getItem('gh_login')
     const storedAvatar = localStorage.getItem('gh_avatar')
 
-    if (storedLogin && storedAvatar) {
-      setUser({ login: storedLogin, avatarUrl: storedAvatar })
-      return
-    }
-
-    const params = new URLSearchParams(window.location.search)
-    const login = params.get('login')
-    const avatar = params.get('avatar')
+    // Check for login and avatar from Apps Script redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const login = urlParams.get('login');
+    const avatar = urlParams.get('avatar');
 
     if (login && avatar) {
-      setUser({ login, avatarUrl: avatar })
-      localStorage.setItem('gh_login', login)
-      localStorage.setItem('gh_avatar', avatar)
-      window.history.replaceState({}, document.title, window.location.pathname)
+      localStorage.setItem('gh_login', login);
+      localStorage.setItem('gh_avatar', avatar);
+      setUser({ login, avatarUrl: avatar });
+      // Remove params from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (storedLogin && storedAvatar) {
+      setUser({ login: storedLogin, avatarUrl: storedAvatar })
     }
   }, [])
 
@@ -136,7 +135,30 @@ function App() {
   const totalAmount = useMemo(() => items.reduce((sum, item) => sum + Number(item.price || 0), 0), [items])
 
   const handleGitHubLogin = () => {
-    window.location.href = 'http://localhost:5000/api/auth/github/login'
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    if (isLocal) {
+      window.location.href = 'http://localhost:5000/api/auth/github/login'
+    } else {
+      const clientId = import.meta.env.VITE_PROD_GITHUB_CLIENT_ID;
+      const gasUrl = import.meta.env.VITE_APP_GAS_URL;
+      
+      if (!clientId || !gasUrl || clientId.includes('your_prod_')) {
+        alert("Production GitHub OAuth is not fully configured yet! Please set VITE_PROD_GITHUB_CLIENT_ID.");
+        return;
+      }
+
+      // Apps Script Callback URL
+      const redirectUri = `${gasUrl}?action=githubCallback`;
+
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: 'read:user user:email',
+        allow_signup: 'true',
+      });
+      window.location.href = `https://github.com/login/oauth/authorize?${params.toString()}`;
+    }
   }
 
   const handleLogout = () => {

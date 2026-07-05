@@ -10,7 +10,8 @@ export type UserProfile = {
   avatarUrl: string
 }
 
-export type { InvoiceItem } from '../api/types';
+import type { InvoiceItem } from '../api/types';
+export type { InvoiceItem };
 
 export type ContactInfo = {
   email: string
@@ -20,7 +21,7 @@ export type ContactInfo = {
   gstin?: string
 }
 
-export type PageId = 'dashboard' | 'invoice' | 'pastInvoices' | 'transactions' | 'profile' | 'settings'
+export type PageId = 'dashboard' | 'invoice' | 'pastInvoices' | 'transactions' | 'profile' | 'settings' | 'clients'
 
 export type NavItem = {
   id: PageId
