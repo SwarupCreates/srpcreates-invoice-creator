@@ -14,6 +14,8 @@ export function HeaderActions({
   startNextInvoice,
   exportPdf,
   isExporting,
+  saveInvoiceToDb,
+  isSaving,
   toggleAddRecord,
   isAddRecordOpen,
   isAddClientOpen,
@@ -27,6 +29,8 @@ export function HeaderActions({
   startNextInvoice: () => void;
   exportPdf: () => void;
   isExporting: boolean;
+  saveInvoiceToDb?: () => void;
+  isSaving?: boolean;
   toggleAddRecord?: () => void;
   isAddRecordOpen?: boolean;
   isAddClientOpen?: boolean;
@@ -100,10 +104,23 @@ export function HeaderActions({
           <StudioIcon name="add" />
           New
         </button>
-        <button type="button" className="primary-button" onClick={exportPdf} disabled={isExporting}>
-          <StudioIcon name={isEditing ? "save" : "download"} />
-          {isExporting ? (isEditing ? 'Saving & Exporting' : 'Exporting') : (isEditing ? 'Save & Export PDF' : 'Upload & Export PDF')}
-        </button>
+        {isEditing ? (
+          <>
+            <button type="button" className="secondary-button" onClick={exportPdf} disabled={isExporting || isSaving}>
+              <StudioIcon name="download" />
+              {isExporting ? 'Exporting...' : 'Re-Export'}
+            </button>
+            <button type="button" className="primary-button" onClick={saveInvoiceToDb} disabled={isSaving || isExporting}>
+              <StudioIcon name="save" />
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </>
+        ) : (
+          <button type="button" className="primary-button" onClick={exportPdf} disabled={isExporting || isSaving}>
+            <StudioIcon name="download" />
+            {isExporting ? 'Exporting...' : 'Upload & Export PDF'}
+          </button>
+        )}
       </div>
     );
   }

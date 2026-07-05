@@ -63,6 +63,7 @@ function App() {
   const [isAddRecordOpen, setIsAddRecordOpen] = useState(false)
   const [isAddClientOpen, setIsAddClientOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   
   const [selectedClientId, setSelectedClientId] = useState('')
   const [saveNewClient, setSaveNewClient] = useState(true)
@@ -270,28 +271,9 @@ function App() {
     setItems((prev) => (prev.length > 1 ? prev.filter((item) => item.id !== id) : [createItem()]))
   }
 
-  const exportPdf = async () => {
-    if (!previewRef.current || isExporting) return
-
-    setIsExporting(true)
-
+  const saveInvoiceToDb = async () => {
+    setIsSaving(true)
     try {
-      await document.fonts?.ready
-      const canvas = await html2canvas(previewRef.current, {
-        backgroundColor: '#ffffff',
-        logging: false,
-        scale: 3,
-        useCORS: true,
-        windowHeight: previewRef.current.scrollHeight,
-        windowWidth: previewRef.current.scrollWidth,
-      })
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
-      const pageWidth = pdf.internal.pageSize.getWidth()
-      const pageHeight = pdf.internal.pageSize.getHeight()
-
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST')
-      pdf.save(`${invoiceId}.pdf`)
-
       if (selectedClientId === 'NEW' && saveNewClient && customerName.trim()) {
         await addCustomer({
           id: `CUST-${Date.now()}`,
@@ -339,7 +321,37 @@ function App() {
 
       // Refresh list if applicable
       await refreshInvoices()
+    } catch (error) {
+      console.error("Failed to save invoice to db:", error)
+      throw error // to prevent exporting if save fails
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
+  const exportPdf = async () => {
+    if (!previewRef.current || isExporting) return
+
+    setIsExporting(true)
+
+    try {
+      await saveInvoiceToDb()
+
+      await document.fonts?.ready
+      const canvas = await html2canvas(previewRef.current, {
+        backgroundColor: '#ffffff',
+        logging: false,
+        scale: 3,
+        useCORS: true,
+        windowHeight: previewRef.current.scrollHeight,
+        windowWidth: previewRef.current.scrollWidth,
+      })
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST')
+      pdf.save(`${invoiceId}.pdf`)
     } catch (error) {
       console.error("Failed to export invoice:", error)
     } finally {
@@ -391,6 +403,8 @@ function App() {
               startNextInvoice={startNextInvoice}
               exportPdf={exportPdf}
               isExporting={isExporting}
+              saveInvoiceToDb={saveInvoiceToDb}
+              isSaving={isSaving}
               toggleAddRecord={() => location.pathname === '/clients' ? setIsAddClientOpen(prev => !prev) : setIsAddRecordOpen(prev => !prev)}
               isAddRecordOpen={isAddRecordOpen}
               isAddClientOpen={isAddClientOpen}
