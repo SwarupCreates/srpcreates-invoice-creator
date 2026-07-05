@@ -402,12 +402,12 @@ function App() {
       <TopNav user={user} onToggleSidebar={() => setIsSidebarOpen(prev => !prev)} />
 
       <div className="studio-layout">
-        {isSidebarOpen && (
-          <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
-        )}
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onLogout={handleLogout} />
 
         <section className="workspace">
+          {isSidebarOpen && (
+            <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
+          )}
           <header className="workspace-header">
             <div className="page-title-pill">
               <StudioIcon name={currentNav.icon} />

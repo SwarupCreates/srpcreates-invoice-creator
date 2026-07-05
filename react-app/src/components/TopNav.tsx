@@ -5,6 +5,7 @@ export function TopNav({ user, onToggleSidebar }: { user: UserProfile, onToggleS
   return (
     <header className="app-topbar">
       <FinanceStudioWordmark />
+      <div className="spacer" />
       <div className="session-chip">
         <span className="hide-mobile">Logged in as {user.login}</span>
         <button type="button" className="mobile-menu-btn" onClick={onToggleSidebar} aria-label="Toggle menu">
