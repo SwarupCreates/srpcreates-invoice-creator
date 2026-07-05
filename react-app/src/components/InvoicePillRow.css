@@ -123,6 +123,9 @@
 .pill-actions-group button.icon-only {
   height: 48px;
   width: 48px;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  padding: 0 !important;
   border-radius: 24px;
   display: inline-flex;
   align-items: center;
