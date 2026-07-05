@@ -1,11 +1,11 @@
-import type { RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { defaultTypes, formatDisplayDate, formatLineAmount, formatTotal, DetailLine, StudioIcon, MailIcon, PhoneIcon, GlobeIcon, bankDetails, invoicePreviewAssets, type ContactInfo, type InvoiceItem } from './shared'
 
 export function InvoicePage({
   invoiceDate,
   setInvoiceDate,
-  invoiceCount,
-  invoiceNumber,
+  invoiceId,
+  setInvoiceId,
   projectName,
   setProjectName,
   customerName,
@@ -21,11 +21,16 @@ export function InvoicePage({
   updateItem,
   removeItem,
   previewRef,
+  selectedClientId,
+  onClientSelect,
+  saveNewClient,
+  setSaveNewClient,
+  customers
 }: {
   invoiceDate: string
   setInvoiceDate: (value: string) => void
-  invoiceCount: number
-  invoiceNumber: string
+  invoiceId: string
+  setInvoiceId: (value: string) => void
   projectName: string
   setProjectName: (value: string) => void
   customerName: string
@@ -41,16 +46,55 @@ export function InvoicePage({
   updateItem: (id: string, key: keyof InvoiceItem, value: string) => void
   removeItem: (id: string) => void
   previewRef: RefObject<HTMLDivElement | null>
+  selectedClientId: string
+  onClientSelect: (id: string) => void
+  saveNewClient: boolean
+  setSaveNewClient: (value: boolean) => void
+  customers: import('../api/types').Customer[]
 }) {
+  const [zoom, setZoom] = useState(1)
+  const previewContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const container = previewContainerRef.current
+    if (!container) return
+
+    // Auto-fit to container width initially and on resize
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const containerWidth = entry.contentRect.width
+        // 794 is the hardcoded width of .invoice-sheet. 36 is the padding (18px * 2)
+        const fitScale = Math.min(1, (containerWidth - 36) / 794)
+        setZoom(fitScale)
+      }
+    })
+    resizeObserver.observe(container)
+
+    // Free-hand zoom with Ctrl/Cmd + scroll
+    const handleNativeWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault()
+        setZoom((prev) => Math.max(0.1, Math.min(prev - e.deltaY * 0.005, 3)))
+      }
+    }
+    
+    container.addEventListener('wheel', handleNativeWheel, { passive: false })
+    
+    return () => {
+      resizeObserver.disconnect()
+      container.removeEventListener('wheel', handleNativeWheel)
+    }
+  }, [])
+
   return (
     <div className="invoice-workspace">
       <section className="editor-panel" aria-label="Invoice editor">
         <div className="panel-heading">
           <div>
             <span className="section-kicker">Invoice details</span>
-            <h2>{invoiceNumber}</h2>
+            <h2>{invoiceId}</h2>
           </div>
-          <span className="total-pill">INR {formatTotal(totalAmount)}</span>
+          <span className="total-pill">₹ (INR) {formatTotal(totalAmount)}</span>
         </div>
 
         <div className="form-grid compact">
@@ -59,8 +103,8 @@ export function InvoicePage({
             <input type="date" value={invoiceDate} onChange={(event) => setInvoiceDate(event.target.value)} />
           </label>
           <label>
-            <span>Sequence</span>
-            <input type="text" value={String(invoiceCount).padStart(2, '0')} readOnly />
+            <span>invoice_id</span>
+            <input type="text" value={invoiceId} onChange={(event) => setInvoiceId(event.target.value)} />
           </label>
           <label className="wide">
             <span>Project name</span>
@@ -74,33 +118,82 @@ export function InvoicePage({
 
         <div className="form-grid">
           <label className="wide">
-            <span>Bill to</span>
-            <input type="text" value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Client or company name" />
-          </label>
-          <label className="wide">
-            <span>Address and tax details</span>
-            <textarea value={billingAddress} onChange={(event) => setBillingAddress(event.target.value)} placeholder="Address, GSTIN, PAN" />
+            <span>Select Client</span>
+            <select 
+              value={selectedClientId} 
+              onChange={(e) => onClientSelect(e.target.value)}
+              style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '12px', fontFamily: 'inherit' }}
+            >
+              <option value="" disabled>Please select a client</option>
+              <option value="NEW">-- Create New Client --</option>
+              {customers.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </label>
         </div>
 
-        <div className="section-heading">
-          <h3>Contact bar</h3>
-        </div>
+        {selectedClientId === 'NEW' && (
+          <>
+            <div className="form-grid" style={{ marginTop: '16px' }}>
+              <label className="wide">
+                <span>Client Name</span>
+                <input type="text" value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Client or company name" required />
+              </label>
+              <label className="wide">
+                <span>Phone Number</span>
+                <input type="text" value={contactInfo.phone || ''} onChange={(event) => setContactInfo({ ...contactInfo, phone: event.target.value })} placeholder="Phone Number" />
+              </label>
+              <label className="wide">
+                <span>Email Address</span>
+                <input type="email" value={contactInfo.email || ''} onChange={(event) => setContactInfo({ ...contactInfo, email: event.target.value })} placeholder="Email Address" />
+              </label>
+              <label className="wide">
+                <span>GSTIN (Optional)</span>
+                <input type="text" value={contactInfo.gstin || ''} onChange={(event) => setContactInfo({ ...contactInfo, gstin: event.target.value })} placeholder="GSTIN" />
+              </label>
+              <label className="wide">
+                <span>PAN NO. (Optional)</span>
+                <input type="text" value={contactInfo.pan || ''} onChange={(event) => setContactInfo({ ...contactInfo, pan: event.target.value })} placeholder="PAN NO." />
+              </label>
+              <label className="wide">
+                <span>Billing Address</span>
+                <textarea value={billingAddress} onChange={(event) => setBillingAddress(event.target.value)} placeholder="Full Billing Address" />
+              </label>
+              
+              <label className="wide" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '4px' }}>
+                <input 
+                  type="checkbox" 
+                  checked={saveNewClient} 
+                  onChange={(e) => setSaveNewClient(e.target.checked)} 
+                  style={{ width: '16px', height: '16px' }}
+                />
+                <span style={{ margin: 0, textTransform: 'none', color: 'var(--text)' }}>Save client information</span>
+              </label>
+            </div>
+            
+            <div className="section-heading">
+              <h3>Contact bar</h3>
+            </div>
 
-        <div className="form-grid compact">
-          <label>
-            <span>Email</span>
-            <input type="email" value={contactInfo.email} onChange={(event) => setContactInfo({ ...contactInfo, email: event.target.value })} />
-          </label>
-          <label>
-            <span>Phone</span>
-            <input type="text" value={contactInfo.phone} onChange={(event) => setContactInfo({ ...contactInfo, phone: event.target.value })} />
-          </label>
-          <label className="wide">
-            <span>Website</span>
-            <input type="text" value={contactInfo.website} onChange={(event) => setContactInfo({ ...contactInfo, website: event.target.value })} />
-          </label>
-        </div>
+            <div className="form-grid compact">
+              <label>
+                <span>Email</span>
+                <input type="email" value={contactInfo.email} onChange={(event) => setContactInfo({ ...contactInfo, email: event.target.value })} />
+              </label>
+              <label>
+                <span>Phone</span>
+                <input type="text" value={contactInfo.phone} onChange={(event) => setContactInfo({ ...contactInfo, phone: event.target.value })} />
+              </label>
+              <label className="wide">
+                <span>Website</span>
+                <input type="text" value={contactInfo.website} onChange={(event) => setContactInfo({ ...contactInfo, website: event.target.value })} />
+              </label>
+            </div>
+          </>
+        )}
+
+
 
         <div className="items-toolbar">
           <h3>Job items</h3>
@@ -146,32 +239,39 @@ export function InvoicePage({
           <span>{formatDisplayDate(invoiceDate)}</span>
         </div>
 
-        <div className="preview-scroll">
-          <div className="invoice-sheet" ref={previewRef}>
-            <header className="invoice-letterhead">
+        <div className="preview-scroll" ref={previewContainerRef}>
+          <div style={{ width: 794 * zoom, height: 1123 * zoom, flex: '0 0 auto', display: 'flex', justifyContent: 'center' }}>
+            <div className="invoice-sheet" ref={previewRef} style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}>
+              <header className="invoice-letterhead">
               <img src={invoicePreviewAssets.letterheadLogo} alt="SRP Creates" className="invoice-logo" />
               {/* <div className="invoice-designs-text">DESIGNS</div> */}
               <div className="invoice-title-block">
                 <h2>INVOICE</h2>
                 <p>
-                  INVOICE_NO: <span>{invoiceNumber}</span>
+                  INVOICE_NO: <span>{invoiceId}</span>
                 </p>
               </div>
             </header>
 
             <div className="invoice-contact-strip">
-              <div>
-                <MailIcon />
-                <span>{contactInfo.email || 'srpcreates@gmail.com'}</span>
-              </div>
-              <div>
-                <PhoneIcon />
-                <span>{contactInfo.phone || '9051477045'}</span>
-              </div>
-              <div>
-                <GlobeIcon />
-                <span>{contactInfo.website || 'srpcreates.framer.website'}</span>
-              </div>
+              {contactInfo.email !== 'NIL' && (
+                <div>
+                  <MailIcon />
+                  <span>{contactInfo.email || 'srpcreates@gmail.com'}</span>
+                </div>
+              )}
+              {contactInfo.phone !== 'NIL' && (
+                <div>
+                  <PhoneIcon />
+                  <span>{contactInfo.phone || '9051477045'}</span>
+                </div>
+              )}
+              {contactInfo.website !== 'NIL' && (
+                <div>
+                  <GlobeIcon />
+                  <span>{contactInfo.website || 'srpcreates.framer.website'}</span>
+                </div>
+              )}
             </div>
 
             <main className="invoice-body">
@@ -180,9 +280,11 @@ export function InvoicePage({
               <section className="invoice-bill-row">
                 <div className="invoice-client">
                   <p>
-                    <strong>Bill To:</strong> {customerName || 'CLIENT NAME'}
+                    <span className="invoice-label">Bill To:</span> {customerName || 'CLIENT NAME'}
                   </p>
-                  {billingLines.length ? billingLines.map((line) => <DetailLine key={line} line={line} />) : <p>Billing address</p>}
+                  {billingLines.length ? billingLines.filter(line => line !== 'NIL').map((line) => <DetailLine key={line} line={line} />) : <p>Billing address</p>}
+                  {contactInfo.gstin && contactInfo.gstin !== 'NIL' && <DetailLine key="gstin" line={`GSTIN: ${contactInfo.gstin}`} />}
+                  {contactInfo.pan && contactInfo.pan !== 'NIL' && <DetailLine key="pan" line={`PAN NO.: ${contactInfo.pan}`} />}
                 </div>
                 <div className="invoice-date">DATE: {formatDisplayDate(invoiceDate)}</div>
               </section>
@@ -214,7 +316,7 @@ export function InvoicePage({
                   </div>
 
                   <div className="invoice-total-lockup">
-                    <span>INR</span>
+                    <span>₹ (INR)</span>
                     <strong>{formatTotal(totalAmount)}</strong>
                   </div>
                 </div>
@@ -225,7 +327,7 @@ export function InvoicePage({
                   {bankDetails.map(([label, value]) => (
                     <p key={label}>
                       <span>{label}</span>
-                      <strong>{value}</strong>
+                      <span className="bank-val">{value}</span>
                     </p>
                   ))}
                 </div>
@@ -233,10 +335,11 @@ export function InvoicePage({
                 <div className="invoice-signature">
                   <img src={invoicePreviewAssets.signatureImage} alt="" />
                   <div />
-                  <strong>SWARUP RANJAN PAUL</strong>
+                  <span className="sig-name">SWARUP RANJAN PAUL</span>
                 </div>
               </footer>
             </main>
+          </div>
           </div>
         </div>
       </section>

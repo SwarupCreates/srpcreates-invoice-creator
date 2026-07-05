@@ -1,0 +1,186 @@
+.past-invoices-page {
+  display: flex;
+  flex-direction: column;
+  /* gap: var(--space-page); */
+  /* padding-bottom: 40px; */
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Container for animation */
+.add-record-drawer {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, margin-bottom 0.4s ease;
+}
+
+.add-record-drawer.open {
+  max-height: 200px;
+  opacity: 1;
+  margin-bottom: var(--space-page);
+}
+
+/* Inline container styling */
+.add-invoice-inline-container {
+  background: var(--panel-deep);
+  border-radius: var(--radius-card);
+  padding: 16px;
+}
+
+.add-invoice-inline-container .section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 16px;
+  font-weight: 760;
+  padding-left: 4px;
+}
+
+.add-invoice-inline-container .section-label .material-symbols-outlined {
+  font-size: 25px;
+}
+
+/* Inline form styling */
+.inline-add-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.inline-form-group {
+  display: flex;
+  align-items: center;
+  background: var(--panel);
+  border-radius: var(--radius-pill);
+  padding: 0 16px;
+  height: 48px;
+  flex: 1 1 auto;
+  min-width: 140px;
+  color: var(--text-muted);
+}
+
+.inline-form-group .material-symbols-outlined {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.inline-form-group input,
+.inline-form-group select {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  width: 100%;
+  outline: none;
+}
+
+.inline-form-group input::placeholder {
+  color: var(--text-muted);
+}
+
+.inline-submit-btn {
+  background: var(--green-strong);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  height: 48px;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.inline-submit-btn:hover:not(:disabled) {
+  background: var(--green);
+}
+
+.inline-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* States */
+.loading-state, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  background: var(--panel-deep);
+  border-radius: var(--radius-card);
+  color: var(--text-muted);
+  font-size: 18px;
+  gap: 16px;
+}
+
+.loading-state .material-symbols-outlined,
+.empty-state .material-symbols-outlined {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+/* List section container */
+.past-invoices-list-container {
+  background: var(--panel-deep);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.past-invoices-list-container .section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 16px;
+  font-weight: 760;
+  padding-left: 4px;
+}
+
+.past-invoices-list-container .section-label .material-symbols-outlined {
+  font-size: 25px;
+}
+
+/* Pill list layout */
+.pill-list-container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  border-radius: 16px;
+}
+
+/* Custom scrollbar for the container */
+.pill-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+.pill-list-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.pill-list-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+.pill-list-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.pill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

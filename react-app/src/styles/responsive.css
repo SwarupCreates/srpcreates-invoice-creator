@@ -26,7 +26,6 @@
     padding: 14px;
   }
 
-  .app-topbar,
   .workspace-header {
     align-items: flex-start;
     flex-direction: column;
@@ -36,34 +35,8 @@
     grid-template-columns: 1fr;
   }
 
-  .side-rail {
-    position: static;
-    min-height: 0;
-  }
-
-  .rail-nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .rail-footer {
-    grid-template-columns: 1fr;
-  }
-
-  .page-title-pill,
-  .date-controls,
-  .invoice-actions {
+  .page-title-pill {
     width: 100%;
-  }
-
-  .date-controls,
-  .invoice-actions {
-    justify-content: stretch;
-  }
-
-  .date-pill,
-  .invoice-actions .primary-button,
-  .invoice-actions .secondary-button {
-    flex: 1;
   }
 
   .pending-row,
@@ -78,8 +51,6 @@
 }
 
 @media (max-width: 680px) {
-  .app-topbar,
-  .side-rail,
   .studio-section,
   .editor-panel,
   .preview-panel {
@@ -95,31 +66,16 @@
     width: 38px;
   }
 
-  .session-chip {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .rail-nav {
-    grid-template-columns: 1fr;
-  }
-
   .page-title-pill {
     min-width: 0;
     padding: 0 20px;
   }
 
-  .date-controls,
-  .invoice-actions,
   .panel-heading,
   .preview-toolbar,
   .items-toolbar {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .date-pill {
-    justify-content: flex-start;
   }
 
   .form-grid,

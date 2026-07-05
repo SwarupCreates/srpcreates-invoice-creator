@@ -1,26 +1,32 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { RefObject } from 'react'
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import './App.css'
 import { DashboardPage } from './pages/DashboardPage'
-import { EmptyFeaturePage } from './pages/EmptyFeaturePage'
 import { InvoicePage } from './pages/InvoicePage'
+import { PastInvoicesPage } from './pages/PastInvoicesPage'
+import { ClientManagerPage } from './pages/ClientManagerPage'
+import { TransactionTrackerPage } from './pages/TransactionTrackerPage'
+import { TopNav } from './components/TopNav'
+import { Sidebar } from './components/Sidebar'
+import { HeaderActions } from './components/HeaderActions'
 import {
   FinanceStudioWordmark,
   StudioIcon,
   createItem,
   formatInvoiceNumber,
   getNextInvoiceCount,
-  navItems,
-  saveInvoiceCount,
   starterItems,
   toInputDate,
+  navItems,
   type ContactInfo,
   type InvoiceItem,
-  type PageId,
   type UserProfile,
 } from './pages/shared'
+import { invoiceApi } from './api/invoiceApi'
+import { transactionApi } from './api/transactionApi'
+import { useFinance } from './context/FinanceContext'
 
 function App() {
   const initialDate = toInputDate(new Date())
@@ -32,10 +38,9 @@ function App() {
     return toInputDate(new Date(today.getFullYear(), today.getMonth(), 0));
   }, []);
 
-  const [activePage, setActivePage] = useState<PageId>('dashboard')
   const [user, setUser] = useState<UserProfile | null>(null)
   const [invoiceDate, setInvoiceDate] = useState(initialDate)
-  const [invoiceCount, setInvoiceCount] = useState(() => getNextInvoiceCount(initialDate))
+  const [invoiceId, setInvoiceId] = useState('')
   
   // Dashboard Date Range State initialized dynamically
   const [fromDate, setFromDate] = useState(lastDayOfLastMonth)
@@ -45,7 +50,7 @@ function App() {
   const fromDateRef = useRef<HTMLInputElement>(null)
   const toDateRef = useRef<HTMLInputElement>(null)
   
-  const [projectName, setProjectName] = useState('Aashirvaad Jomjomati Menu April Actuals - 2026')
+  const [projectName, setProjectName] = useState('Enter your Project Name')
   const [customerName, setCustomerName] = useState('ICE MEDIA LAB & ANALYTICS PVT. LTD.')
   const [billingAddress, setBillingAddress] = useState('C25, SECTOR 8, GAUTAM BUDDHA NAGAR\nNOIDA - 201301, Uttar Pradesh\nGSTIN : 09AAFCII224E`ZZ\nPAN NO. : AAFCII224E')
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
@@ -54,8 +59,46 @@ function App() {
     website: 'srpcreates.framer.website',
   })
   const [items, setItems] = useState<InvoiceItem[]>(starterItems)
+
+  const [isAddRecordOpen, setIsAddRecordOpen] = useState(false)
+  const [isAddClientOpen, setIsAddClientOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  
+  const [selectedClientId, setSelectedClientId] = useState('')
+  const [saveNewClient, setSaveNewClient] = useState(true)
+
   const previewRef = useRef<HTMLDivElement | null>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { invoices, refreshInvoices, customers, addCustomer } = useFinance()
+
+  const handleClientSelect = (id: string) => {
+    setSelectedClientId(id)
+    if (id !== 'NEW') {
+      const cust = customers.find(c => c.id === id)
+      if (cust) {
+        setCustomerName(cust.name)
+        setBillingAddress(cust.address || '')
+        setContactInfo(prev => ({
+          ...prev,
+          email: cust.email || '',
+          phone: cust.phone || '',
+          pan: cust.pan || '',
+          gstin: cust.gstin || ''
+        }))
+      }
+    } else {
+      setCustomerName('')
+      setBillingAddress('')
+      setContactInfo(prev => ({
+        ...prev,
+        email: '',
+        phone: '',
+        pan: '',
+        gstin: ''
+      }))
+    }
+  }
 
   useEffect(() => {
     const storedLogin = localStorage.getItem('gh_login')
@@ -79,14 +122,18 @@ function App() {
   }, [])
 
   useEffect(() => {
-    setInvoiceCount(getNextInvoiceCount(invoiceDate))
-  }, [invoiceDate])
+    if (invoices) {
+      setInvoiceId(prev => {
+        if (prev === '' || prev.startsWith('SPR')) {
+          return formatInvoiceNumber(invoiceDate, getNextInvoiceCount(invoiceDate, invoices));
+        }
+        return prev;
+      });
+    }
+  }, [invoiceDate, invoices])
 
-  const invoiceNumber = useMemo(() => formatInvoiceNumber(invoiceDate, invoiceCount), [invoiceDate, invoiceCount])
   const billingLines = useMemo(() => billingAddress.split(/\r?\n/).filter(Boolean), [billingAddress])
   const totalAmount = useMemo(() => items.reduce((sum, item) => sum + Number(item.price || 0), 0), [items])
-
-  const activeNavItem = navItems.find((item) => item.id === activePage) ?? navItems[0]
 
   const handleGitHubLogin = () => {
     window.location.href = 'http://localhost:5000/api/auth/github/login'
@@ -96,18 +143,15 @@ function App() {
     localStorage.removeItem('gh_login')
     localStorage.removeItem('gh_avatar')
     setUser(null)
-    setActivePage('dashboard')
+    navigate('/dashboard')
   }
 
   const startNextInvoice = () => {
-    saveInvoiceCount(invoiceDate, invoiceCount)
-    const nextCount = getNextInvoiceCount(invoiceDate)
-    setInvoiceCount(nextCount)
     setProjectName('')
     setCustomerName('')
     setBillingAddress('')
     setItems([createItem()])
-    setActivePage('invoice')
+    navigate('/invoice')
   }
 
   const updateItem = (id: string, key: keyof InvoiceItem, value: string) => {
@@ -142,8 +186,46 @@ function App() {
       const pageHeight = pdf.internal.pageSize.getHeight()
 
       pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST')
-      pdf.save(`${invoiceNumber}.pdf`)
-      saveInvoiceCount(invoiceDate, invoiceCount)
+      pdf.save(`${invoiceId}.pdf`)
+
+      if (selectedClientId === 'NEW' && saveNewClient && customerName.trim()) {
+        await addCustomer({
+          id: `CUST-${Date.now()}`,
+          name: customerName,
+          address: billingAddress,
+          email: contactInfo.email,
+          phone: contactInfo.phone,
+          pan: contactInfo.pan,
+          gstin: contactInfo.gstin
+        })
+      }
+
+      // Create backend entry for the invoice
+      await invoiceApi.create({
+        id: invoiceId,
+        date: invoiceDate,
+        customerName: customerName,
+        projectName: projectName,
+        totalAmount: totalAmount,
+        status: 'Pending',
+        items: items.map(item => ({ ...item, invoiceId: invoiceId }))
+      })
+
+      // Generate a distinct transaction record as requested
+      await transactionApi.create({
+        id: `TXN-${invoiceId}`,
+        date: invoiceDate,
+        amount: totalAmount,
+        type: 'Income',
+        category: 'Invoice',
+        description: `Invoice ${invoiceId} for ${projectName || customerName}`
+      })
+
+      // Refresh list if applicable
+      await refreshInvoices()
+
+    } catch (error) {
+      console.error("Failed to export invoice:", error)
     } finally {
       setIsExporting(false)
     }
@@ -167,154 +249,74 @@ function App() {
     )
   }
 
-  const renderPage = () => {
-    if (activePage === 'dashboard') {
-      return <DashboardPage onCreateInvoice={() => setActivePage('invoice')} fromDate={fromDate} toDate={toDate} />
-    }
-
-    if (activePage === 'invoice') {
-      return (
-        <InvoicePage
-          invoiceDate={invoiceDate}
-          setInvoiceDate={setInvoiceDate}
-          invoiceCount={invoiceCount}
-          invoiceNumber={invoiceNumber}
-          projectName={projectName}
-          setProjectName={setProjectName}
-          customerName={customerName}
-          setCustomerName={setCustomerName}
-          billingAddress={billingAddress}
-          setBillingAddress={setBillingAddress}
-          billingLines={billingLines}
-          contactInfo={contactInfo}
-          setContactInfo={setContactInfo}
-          items={items}
-          totalAmount={totalAmount}
-          addItem={addItem}
-          updateItem={updateItem}
-          removeItem={removeItem}
-          previewRef={previewRef}
-        />
-      )
-    }
-
-    if (activePage === 'pastInvoices') {
-      return <EmptyFeaturePage title="Past Invoices" icon="history" />
-    }
-
-    return <EmptyFeaturePage title="Transaction tracker" icon="payments" />
-  }
+  const currentNav = navItems.find((n) => n.path === location.pathname) || navItems[0]
 
   return (
     <main className="app-shell">
-      <header className="app-topbar">
-        <FinanceStudioWordmark />
-        <div className="session-chip">
-          <span>Logged in as {user.login}</span>
-          <i aria-hidden="true" />
-          {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" />
-          ) : (
-            <span className="avatar-fallback">
-              <StudioIcon name="person" filled />
-            </span>
-          )}
-        </div>
-      </header>
+      <TopNav user={user} />
 
       <div className="studio-layout">
-        <aside className="side-rail">
-          <nav className="rail-nav" aria-label="Workspace">
-            {navItems.map((item) => (
-              <button key={item.id} type="button" className={`rail-link${activePage === item.id ? ' active' : ''}`} onClick={() => setActivePage(item.id)}>
-                <StudioIcon name={item.icon} />
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="rail-footer">
-            <div className="release-card">
-              <FinanceStudioWordmark mark="/src/assets/icons/FinanceStudioWhiteLogoMark.svg" muted />
-              <span>release-v1.0</span>
-            </div>
-
-            <button type="button" className="rail-link utility">
-              <StudioIcon name="account_circle" />
-              Account Manager
-            </button>
-
-            <button type="button" className="rail-link sign-out" onClick={handleLogout}>
-              <StudioIcon name="logout" />
-              Sign Out
-            </button>
-          </div>
-        </aside>
+        <Sidebar onLogout={handleLogout} />
 
         <section className="workspace">
           <header className="workspace-header">
             <div className="page-title-pill">
-              <StudioIcon name={activeNavItem.icon} />
-              <h1>{activeNavItem.label}</h1>
+              <StudioIcon name={currentNav.icon} />
+              <h1>{currentNav.label}</h1>
             </div>
 
-            {activePage === 'dashboard' ? (
-              <div className="date-controls" aria-label="Dashboard range" style={{ position: 'relative' }}>
-                <button type="button" className="date-pill" onClick={() => fromDateRef.current?.showPicker()}>
-                  <span>From</span>
-                  <i aria-hidden="true" />
-                  <StudioIcon name="calendar_month" />
-                  {new Date(fromDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
-                </button>
-                
-                {/* Hidden native date input anchored beneath the 'From' button */}
-                <input
-                  ref={fromDateRef}
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  style={{ position: 'absolute', bottom: 0, left: '25%', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}
-                  tabIndex={-1}
-                  aria-hidden="true"
-                />
-
-                <button type="button" className="date-pill" onClick={() => toDateRef.current?.showPicker()}>
-                  <span>To</span>
-                  <i aria-hidden="true" />
-                  <StudioIcon name="calendar_month" />
-                  {new Date(toDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
-                </button>
-                
-                {/* Hidden native date input anchored beneath the 'To' button */}
-                <input
-                  ref={toDateRef}
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  style={{ position: 'absolute', bottom: 0, right: '25%', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}
-                  tabIndex={-1}
-                  aria-hidden="true"
-                />
-              </div>
-            ) : null}
-
-            {activePage === 'invoice' ? (
-              <div className="invoice-actions">
-                <button type="button" className="secondary-button" onClick={startNextInvoice}>
-                  <StudioIcon name="add" />
-                  New
-                </button>
-                <button type="button" className="primary-button" onClick={exportPdf} disabled={isExporting}>
-                  <StudioIcon name="download" />
-                  {isExporting ? 'Exporting' : 'Export PDF'}
-                </button>
-              </div>
-            ) : null}
+            <HeaderActions
+              fromDate={fromDate}
+              toDate={toDate}
+              setFromDate={setFromDate}
+              setToDate={setToDate}
+              fromDateRef={fromDateRef}
+              toDateRef={toDateRef}
+              startNextInvoice={startNextInvoice}
+              exportPdf={exportPdf}
+              isExporting={isExporting}
+              toggleAddRecord={() => location.pathname === '/clients' ? setIsAddClientOpen(prev => !prev) : setIsAddRecordOpen(prev => !prev)}
+              isAddRecordOpen={isAddRecordOpen}
+              isAddClientOpen={isAddClientOpen}
+            />
           </header>
 
-          {/* New Content Wrapper specifically locking internally clipped scrolling! */}
           <div style={{ minHeight: 0, height: '100%', overflowY: 'auto', padding: 0 }}>
-            {renderPage()}
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardPage onCreateInvoice={() => navigate('/invoice')} fromDate={fromDate} toDate={toDate} />} />
+              <Route path="/invoice" element={
+                <InvoicePage
+                  invoiceDate={invoiceDate}
+                  setInvoiceDate={setInvoiceDate}
+                  invoiceId={invoiceId}
+                  setInvoiceId={setInvoiceId}
+                  projectName={projectName}
+                  setProjectName={setProjectName}
+                  customerName={customerName}
+                  setCustomerName={setCustomerName}
+                  billingAddress={billingAddress}
+                  setBillingAddress={setBillingAddress}
+                  billingLines={billingLines}
+                  contactInfo={contactInfo}
+                  setContactInfo={setContactInfo}
+                  items={items}
+                  addItem={addItem}
+                  updateItem={updateItem}
+                  removeItem={removeItem}
+                  totalAmount={totalAmount}
+                  previewRef={previewRef}
+                  selectedClientId={selectedClientId}
+                  onClientSelect={handleClientSelect}
+                  saveNewClient={saveNewClient}
+                  setSaveNewClient={setSaveNewClient}
+                  customers={customers}
+                />
+              } />
+              <Route path="/past-invoices" element={<PastInvoicesPage isAddRecordOpen={isAddRecordOpen} />} />
+              <Route path="/clients" element={<ClientManagerPage isAddClientOpen={isAddClientOpen} setIsAddClientOpen={setIsAddClientOpen} />} />
+              <Route path="/tracker" element={<TransactionTrackerPage />} />
+            </Routes>
           </div>
         </section>
       </div>

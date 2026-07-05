@@ -10,17 +10,14 @@ export type UserProfile = {
   avatarUrl: string
 }
 
-export type InvoiceItem = {
-  id: string
-  description: string
-  type: string
-  price: string
-}
+export type { InvoiceItem } from '../api/types';
 
 export type ContactInfo = {
   email: string
   phone: string
   website: string
+  pan?: string
+  gstin?: string
 }
 
 export type PageId = 'dashboard' | 'invoice' | 'pastInvoices' | 'transactions' | 'profile' | 'settings'
@@ -29,27 +26,22 @@ export type NavItem = {
   id: PageId
   label: string
   icon: string
+  path: string
 }
 
-export const INVOICE_PREFIX = 'SRP'
-export const COUNT_STORAGE_KEY = 'srp_invoice_counts'
+export const INVOICE_PREFIX = 'SPR'
 export const defaultTypes = ['Static', 'Reel', 'Design', 'Consulting']
 
 export const navItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { id: 'invoice', label: 'Create New Invoice', icon: 'add_circle' },
-  { id: 'pastInvoices', label: 'Past Invoices', icon: 'history' },
-  { id: 'transactions', label: 'Transaction tracker', icon: 'payments' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
+  { id: 'invoice', label: 'Create New Invoice', icon: 'add_circle', path: '/invoice' },
+  { id: 'pastInvoices', label: 'Past Invoices', icon: 'history', path: '/past-invoices' },
+  { id: 'clients', label: 'Client Manager', icon: 'person', path: '/clients' },
+  { id: 'transactions', label: 'Transaction tracker', icon: 'payments', path: '/transactions' }
 ]
 
 export const starterItems: InvoiceItem[] = [
-  { id: 'starter-1', description: 'JomjomatiMenu Announcement', type: 'Static', price: '2000' },
-  { id: 'starter-2', description: 'JomjomatiMenu Thank You', type: 'Static', price: '2000' },
-  { id: 'starter-3', description: 'JomjomatiMenu KV', type: 'Static', price: '1600' },
-  { id: 'starter-4', description: 'JomjomatiMenu Endslate', type: 'Reel', price: '2600' },
-  { id: 'starter-5', description: 'JomjomatiMenu Announcement', type: 'Reel', price: '2600' },
-  { id: 'starter-6', description: 'JomjomatiMenu Contest Reminder', type: 'Reel', price: '2600' },
-  { id: 'starter-7', description: 'JomjomatiMenu Winners Stories', type: 'Static', price: '2000' },
+  { id: 'starter-1', description: 'Write Product Description', type: 'Static', price: '0000' },
 ]
 
 export const bankDetails = [
@@ -88,24 +80,23 @@ export function formatDisplayDate(inputDate: string) {
   return `${dd}-${mm}-${yyyy}`
 }
 
-export function readInvoiceCounts(): Record<string, number> {
-  try {
-    return JSON.parse(localStorage.getItem(COUNT_STORAGE_KEY) || '{}')
-  } catch {
-    return {}
-  }
-}
-
-export function getNextInvoiceCount(inputDate: string) {
-  const counts = readInvoiceCounts()
-  return (counts[formatDateToken(inputDate)] || 0) + 1
-}
-
-export function saveInvoiceCount(inputDate: string, count: number) {
+export function getNextInvoiceCount(inputDate: string, invoices: import('../api/types').Invoice[]): number {
   const token = formatDateToken(inputDate)
-  const counts = readInvoiceCounts()
-  counts[token] = Math.max(counts[token] || 0, count)
-  localStorage.setItem(COUNT_STORAGE_KEY, JSON.stringify(counts))
+  const prefix = `${INVOICE_PREFIX}${token}-`
+  
+  const matchingInvoices = invoices.filter(inv => inv.id.startsWith(prefix))
+  
+  if (matchingInvoices.length === 0) {
+    return 1
+  }
+  
+  const counts = matchingInvoices.map(inv => {
+    const parts = inv.id.split('-')
+    const count = parseInt(parts[parts.length - 1], 10)
+    return isNaN(count) ? 0 : count
+  })
+  
+  return Math.max(...counts) + 1
 }
 
 export function formatInvoiceNumber(inputDate: string, count: number) {
@@ -127,7 +118,7 @@ export function DetailLine({ line }: { line: string }) {
   if (separatorIndex > 0 && separatorIndex <= 14) {
     return (
       <p>
-        <strong>{line.slice(0, separatorIndex + 1)}</strong>
+        <span className="detail-label">{line.slice(0, separatorIndex + 1)}</span>
         {line.slice(separatorIndex + 1)}
       </p>
     )
@@ -149,7 +140,7 @@ export function FinanceStudioWordmark({ mark = financeLogoColor, muted = false }
     <div className={`studio-wordmark${muted ? ' muted' : ''}`}>
       <img src={mark} alt="" />
       <span>
-        <strong>Finance</strong>Studio
+        <span className="wordmark-bold">Finance</span>Studio
       </span>
     </div>
   )

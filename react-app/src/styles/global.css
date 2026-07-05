@@ -2,9 +2,9 @@
   color-scheme: dark;
   --space-page: 20px;
   --page: #000000;
-  --panel: #151515;
-  --panel-deep: #0d0d0d;
-  --panel-soft: #ffffff08;
+  --panel: #ffffff16;
+  --panel-deep: #ffffff10;
+  --panel-soft: #ffffff16;
   --control: #3b3b3b;
   --control-hover: #484848;
   --text: #f7f7f7;
@@ -21,7 +21,8 @@
   --radius-card: 32px; /* Adjusted to 32px as per design specs */
   --radius-pill: 36px;
   --shadow-soft: 0 26px 70px rgba(0, 0, 0, 0.42);
-  font-family: "Rethink Sans", system-ui, sans-serif;
+  font-family: "Urbanist", sans-serif;
+  font-optical-sizing: auto;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -51,7 +52,8 @@ button,
 input,
 select,
 textarea {
-  font-family: "Rethink Sans", system-ui, sans-serif;
+  font-family: "Urbanist", sans-serif;
+  font-optical-sizing: auto;
   letter-spacing: 0;
 }
 
@@ -86,9 +88,7 @@ button:disabled {
 
 /* Fill icons on hover for all interactive elements automatically */
 button:hover .material-symbols-outlined:not([data-filled="true"]),
-button:active .material-symbols-outlined:not([data-filled="true"]),
-.rail-link:hover .material-symbols-outlined:not([data-filled="true"]),
-.rail-link.active .material-symbols-outlined:not([data-filled="true"]) {
+button:active .material-symbols-outlined:not([data-filled="true"]) {
   font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
@@ -109,8 +109,8 @@ button:active .material-symbols-outlined:not([data-filled="true"]),
   flex: 0 0 auto;
 }
 
-.studio-wordmark strong {
-  font-weight: 900;
+.studio-wordmark .wordmark-bold {
+  font-weight: 760;
 }
 
 .studio-wordmark.muted {
@@ -129,19 +129,40 @@ button:active .material-symbols-outlined:not([data-filled="true"]),
 .icon-text-button,
 .icon-button,
 .success-button,
-.tool-button,
-.date-pill,
-.rail-link {
+.tool-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: 51px;
+  min-height: 59px;
   border-radius: var(--radius-pill);
   cursor: pointer;
   color: var(--text);
-  font-weight: 500;
+  font-weight: 650;
   transition: background-color 150ms ease, color 150ms ease, opacity 150ms ease, transform 150ms ease;
+}
+
+.form-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 59px;
+  border-radius: calc(var(--radius-pill)/2);
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 650;
+  transition: background-color 150ms ease, color 150ms ease, opacity 150ms ease, transform 150ms ease;
+}
+
+.form-button {
+  background: #ffffff;
+  color: #050505;
+  padding: 0 24px;
+}
+
+.form-button:hover {
+  background: #ececec;
 }
 
 .primary-button {
@@ -163,8 +184,7 @@ button:active .material-symbols-outlined:not([data-filled="true"]),
 
 .secondary-button:hover,
 .icon-text-button:hover,
-.tool-button:hover,
-.date-pill:hover {
+.tool-button:hover {
   background: var(--control-hover);
 }
 
@@ -192,6 +212,30 @@ button:active .material-symbols-outlined:not([data-filled="true"]),
   background: var(--page);
 }
 
+main.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  border-radius: var(--radius-shell);
+  background: var(--panel);
+  /* The space for top padding */
+  padding: var(--space-page) var(--space-page) 30px;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  opacity: 0;
+}
+
 .login-panel {
   width: min(100%, 460px);
   display: grid;
@@ -205,7 +249,7 @@ button:active .material-symbols-outlined:not([data-filled="true"]),
 .login-panel p {
   margin: 0;
   color: var(--text-muted);
-  font-weight: 750;
+  font-weight: 760;
 }
 
 .login-panel h1 {
@@ -227,134 +271,11 @@ button:active .material-symbols-outlined:not([data-filled="true"]),
   color: var(--text);
 }
 
-.app-topbar {
-  min-height: 65px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 12px 14px 12px 31px;
-  border-radius: var(--radius-pill);
-  background: var(--panel);
-}
-
-.session-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 17px;
-  min-width: 0;
-  color: var(--text-muted);
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.session-chip > span:first-child {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.session-chip i {
-  width: 1px;
-  height: 30px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.session-chip img,
-.avatar-fallback {
-  width: 41px;
-  height: 41px;
-  border-radius: 50%;
-}
-
-.session-chip img {
-  object-fit: cover;
-}
-
-.avatar-fallback {
-  display: grid;
-  place-items: center;
-  background: #d9d9d9;
-  color: #595959;
-}
-
 .studio-layout {
   min-height: 0;
   display: grid;
   grid-template-columns: 318px minmax(0, 1fr);
   gap: var(--space-page);
-}
-
-.side-rail {
-  min-height: 0;
-  height: 100%;
-  max-height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-page);
-  overflow: hidden;
-  padding: 24px;
-  border-radius: 45px; /* Optional: adjust if rail needs to match card 32px */
-  background: var(--panel);
-}
-
-.rail-nav {
-  display: grid;
-  gap: calc(var(--space-page)/1.5);
-}
-
-.rail-link {
-  width: 100%;
-  justify-content: flex-start;
-  padding: 0 15px;
-  background: var(--control);
-  color: var(--text);
-  font-size: 15px;
-  text-align: left;
-}
-
-.rail-link .material-symbols-outlined {
-  font-size: 27px;
-}
-
-.rail-link.active {
-  background: #ffffff;
-  color: #101010;
-}
-
-.rail-link:hover:not(.active) {
-  background: var(--control-hover);
-}
-
-.rail-footer {
-  margin-top: auto;
-  display: grid;
-  gap: calc(var(--space-page)/1.5);
-}
-
-.release-card {
-  display: grid;
-  gap: 8px;
-  padding: 24px 18px 19px;
-  border-radius: 20px;
-  background: #090909;
-}
-
-.release-card > span {
-  /* padding-left: 59px; */
-  color: var(--text-muted);
-  font-size: 16px;
-  font-weight: 650;
-}
-
-.rail-link.utility {
-  background: var(--control);
-}
-
-.rail-link.sign-out {
-  background: var(--red);
 }
 
 .workspace {
@@ -390,91 +311,6 @@ button:active .material-symbols-outlined:not([data-filled="true"]),
   margin: 0;
   color: var(--text);
   font-size: 22px;
-  font-weight: 500;
+  font-weight: 650;
   line-height: 1;
-}
-
-/* --- Responsive Button Groups Logic --- */
-.date-controls,
-.invoice-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px; /* Tighter gap makes the dynamic radii visually cohesive */
-  min-width: fit-content;
-}
-
-.date-controls > button, 
-.invoice-actions > button {
-  border-radius: var(--radius-pill); /* Fallback to fully rounded if single */
-}
-
-/* Pair or More - First Item */
-.date-controls > button:first-of-type:not(:last-of-type),
-.invoice-actions > button:first-of-type:not(:last-of-type) {
-  /* Using 30px instead of 999px to prevent the browser from proportionally 
-     scaling down the 8px radius due to the large 999px value exceeding element width */
-  border-radius: 30px 8px 8px 30px;
-}
-
-/* Pair or More - Last Item */
-.date-controls > button:last-of-type:not(:first-of-type),
-.invoice-actions > button:last-of-type:not(:first-of-type) {
-  border-radius: 8px 30px 30px 8px;
-}
-
-/* Three or More - Middle Items */
-.date-controls > button:not(:first-of-type):not(:last-of-type),
-.invoice-actions > button:not(:first-of-type):not(:last-of-type) {
-  border-radius: 8px;
-}
-
-.date-pill {
-  gap: 12px;
-  min-height: 59px;
-  padding: 0 20px;
-  background: var(--panel);
-  color: var(--text);
-  font-size: 20px;
-  min-width: fit-content;
-}
-
-.date-pill span {
-  color: var(--text-muted);
-}
-
-.date-pill i {
-  width: 1px;
-  height: 27px;
-  background: rgba(255, 255, 255, 0.23);
-}
-
-.date-popup {
-  position: absolute;
-  top: calc(100% + 12px);
-  background: var(--panel-deep);
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 16px;
-  display: grid;
-  gap: 12px;
-  z-index: 100;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  min-width: 220px;
-  animation: modal-slide-up 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.date-popup.from-popup {
-  right: auto;
-  left: 0;
-}
-
-.date-popup.to-popup {
-  right: 0;
-  left: auto;
-}
-
-.date-popup-row {
-  display: grid;
-  gap: 8px;
 }
