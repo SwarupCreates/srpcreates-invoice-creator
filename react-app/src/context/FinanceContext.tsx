@@ -11,6 +11,8 @@ type FinanceContextType = {
   markInvoicePaid: (id: string) => Promise<boolean>;
   markInvoicePending: (id: string) => Promise<boolean>;
   addInvoice: (invoice: Invoice) => Promise<boolean>;
+  updateInvoice: (invoice: Invoice) => Promise<boolean>;
+  deleteInvoice: (id: string) => Promise<boolean>;
   
   customers: Customer[];
   isLoadingCustomers: boolean;
@@ -105,6 +107,42 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateInvoice = async (invoice: Invoice) => {
+    try {
+      setInvoices(prev => prev.map(inv => inv.id === invoice.id ? invoice : inv));
+      
+      const response = await invoiceApi.update(invoice);
+      if (!response.success) {
+        await refreshInvoices();
+        alert(`Failed to update invoice: ${response.message}`);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Error updating invoice", error);
+      await refreshInvoices();
+      return false;
+    }
+  };
+
+  const deleteInvoice = async (id: string) => {
+    try {
+      setInvoices(prev => prev.filter(inv => inv.id !== id));
+      
+      const response = await invoiceApi.delete(id);
+      if (!response.success) {
+        await refreshInvoices();
+        alert(`Failed to delete invoice: ${response.message}`);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Error deleting invoice", error);
+      await refreshInvoices();
+      return false;
+    }
+  };
+
   const refreshCustomers = async () => {
     setIsLoadingCustomers(true);
     try {
@@ -180,7 +218,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   return (
     <FinanceContext.Provider value={{ 
-      invoices, isLoadingInvoices, refreshInvoices, markInvoicePaid, markInvoicePending, addInvoice,
+      invoices, isLoadingInvoices, refreshInvoices, markInvoicePaid, markInvoicePending,
+      addInvoice,
+      updateInvoice,
+      deleteInvoice,
+      
       customers, isLoadingCustomers, refreshCustomers, addCustomer, updateCustomer, deleteCustomer
     }}>
       {children}

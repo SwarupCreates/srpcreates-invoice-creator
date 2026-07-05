@@ -7,11 +7,15 @@ export function InvoicePillRow({
   invoice, 
   onMarkFulfilled,
   onMarkPending,
+  onEdit,
+  onDelete,
   onClick 
 }: { 
   invoice: Invoice | { id: string, date?: string, projectName?: string, customerName?: string, totalAmount: number | string, status: string, project?: string, amount?: number | string, client?: string };
   onMarkFulfilled?: (id: string) => void;
   onMarkPending?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
   onClick?: (id: string) => void;
 }) {
   const [isDismissing, setIsDismissing] = useState(false);
@@ -75,23 +79,31 @@ export function InvoicePillRow({
         </div>
       </div>
       
-      {!isFulfilled && onMarkFulfilled && (
-        <div className="pill-action">
-          <button type="button" className="success-button" onClick={(e) => handleAction(e, 'fulfill')}>
+      <div className="pill-actions-group">
+        {!isFulfilled && onMarkFulfilled && (
+          <button type="button" className="success-button icon-only" onClick={(e) => handleAction(e, 'fulfill')} title="Mark as fulfilled">
             <StudioIcon name="approval_delegation" filled />
-            Mark as fulfilled
           </button>
-        </div>
-      )}
+        )}
 
-      {isFulfilled && onMarkPending && (
-        <div className="pill-action">
-          <button type="button" className="pending-button" onClick={(e) => handleAction(e, 'pending')}>
+        {isFulfilled && onMarkPending && (
+          <button type="button" className="pending-button icon-only" onClick={(e) => handleAction(e, 'pending')} title="Mark as pending">
             <StudioIcon name="history_toggle_off" filled />
-            Not yet fulfilled
           </button>
-        </div>
-      )}
+        )}
+
+        {onEdit && (
+          <button type="button" className="edit-button icon-only" onClick={(e) => { e.stopPropagation(); onEdit(invoice.id); }} title="Edit transaction">
+            <StudioIcon name="edit" />
+          </button>
+        )}
+
+        {onDelete && (
+          <button type="button" className="delete-button icon-only" onClick={(e) => { e.stopPropagation(); onDelete(invoice.id); }} title="Delete transaction">
+            <StudioIcon name="delete" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

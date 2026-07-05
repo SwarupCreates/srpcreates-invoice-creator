@@ -107,7 +107,7 @@ export function HeaderActions({
     );
   }
 
-  if (location.pathname === '/past-invoices') {
+  if (location.pathname === '/transactions') {
     return (
       <div className="invoice-actions">
         <button type="button" className="secondary-button" onClick={refreshInvoices} disabled={isLoadingInvoices}>

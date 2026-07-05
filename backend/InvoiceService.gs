@@ -41,13 +41,39 @@ const InvoiceService = {
   },
 
   update: function(payload) {
-    // Placeholder logic for updating via SheetService
-    return Response.success(null, "Not implemented yet");
+    Validation.requireFields(payload.data, ['id', 'date', 'totalAmount', 'status']);
+    
+    // Update main invoice
+    const success = SheetService.updateRow(Config.SHEETS.INVOICES, 'id', payload.data.id, payload.data);
+    
+    if (!success) {
+      return Response.error("Invoice not found or could not be updated", 404);
+    }
+    
+    // If items are provided, delete all existing items and insert new ones
+    if (payload.data.items && Array.isArray(payload.data.items)) {
+      SheetService.deleteRows(Config.SHEETS.INVOICE_ITEMS, 'invoiceId', payload.data.id);
+      payload.data.items.forEach(item => {
+        item.invoiceId = payload.data.id;
+        SheetService.insertRow(Config.SHEETS.INVOICE_ITEMS, item);
+      });
+    }
+
+    return Response.success(payload.data, "Invoice updated successfully");
   },
 
   delete: function(payload) {
-    // Placeholder logic
-    return Response.success(null, "Not implemented yet");
+    Validation.requireFields(payload.data, ['id']);
+    
+    const success = SheetService.deleteRow(Config.SHEETS.INVOICES, 'id', payload.data.id);
+    if (!success) {
+      return Response.error("Invoice not found", 404);
+    }
+    
+    // Also delete any related items
+    SheetService.deleteRows(Config.SHEETS.INVOICE_ITEMS, 'invoiceId', payload.data.id);
+    
+    return Response.success({ id: payload.data.id }, "Invoice deleted successfully");
   },
 
   markPaid: function(payload) {

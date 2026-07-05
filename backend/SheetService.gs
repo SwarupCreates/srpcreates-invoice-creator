@@ -89,5 +89,51 @@ const SheetService = {
     });
 
     return true;
+  },
+
+  deleteRow: function(sheetName, idField, idValue) {
+    const sheet = this.getSheet(sheetName);
+    if (!sheet) throw new Error("Sheet not found: " + sheetName);
+    if (sheet.getLastRow() <= 1) return false;
+
+    const headers = this.getHeaders(sheet);
+    if (headers[idField] === undefined) throw new Error("ID field not found in headers");
+
+    const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+    
+    let rowIndex = -1;
+    for (let i = 0; i < data.length; i++) {
+      if (String(data[i][headers[idField]]) === String(idValue)) {
+        rowIndex = i + 2;
+        break;
+      }
+    }
+
+    if (rowIndex === -1) return false;
+
+    sheet.deleteRow(rowIndex);
+    return true;
+  },
+
+  deleteRows: function(sheetName, idField, idValue) {
+    const sheet = this.getSheet(sheetName);
+    if (!sheet) throw new Error("Sheet not found: " + sheetName);
+    if (sheet.getLastRow() <= 1) return 0;
+
+    const headers = this.getHeaders(sheet);
+    if (headers[idField] === undefined) throw new Error("ID field not found in headers");
+
+    const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+    
+    let deletedCount = 0;
+    // Iterate backwards so deleting rows doesn't mess up subsequent indices
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (String(data[i][headers[idField]]) === String(idValue)) {
+        sheet.deleteRow(i + 2);
+        deletedCount++;
+      }
+    }
+
+    return deletedCount;
   }
 };

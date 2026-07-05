@@ -5,9 +5,8 @@ import html2canvas from 'html2canvas'
 import './App.css'
 import { DashboardPage } from './pages/DashboardPage'
 import { InvoicePage } from './pages/InvoicePage'
-import { PastInvoicesPage } from './pages/PastInvoicesPage'
+import { TransactionManagerPage } from './pages/TransactionManagerPage'
 import { ClientManagerPage } from './pages/ClientManagerPage'
-import { TransactionTrackerPage } from './pages/TransactionTrackerPage'
 import { TopNav } from './components/TopNav'
 import { Sidebar } from './components/Sidebar'
 import { HeaderActions } from './components/HeaderActions'
@@ -71,6 +70,7 @@ function App() {
   const previewRef = useRef<HTMLDivElement | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
+  const [forceEditId, setForceEditId] = useState<string>('')
   const { invoices, refreshInvoices, customers, addCustomer } = useFinance()
 
   const handleClientSelect = (id: string) => {
@@ -145,6 +145,25 @@ function App() {
       });
     }
   }, [invoiceDate, invoices])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const editId = params.get('edit');
+    if (editId && invoices && invoices.length > 0) {
+      const invToEdit = invoices.find(i => i.id === editId);
+      if (invToEdit) {
+        setInvoiceId(invToEdit.id);
+        setInvoiceDate(toInputDate(new Date(invToEdit.date)));
+        setCustomerName(invToEdit.customerName);
+        setProjectName(invToEdit.projectName || '');
+        if (invToEdit.items && invToEdit.items.length > 0) {
+          setItems(invToEdit.items);
+        }
+        // clear query param
+        navigate('/invoice', { replace: true });
+      }
+    }
+  }, [location.search, invoices, navigate]);
 
   const billingLines = useMemo(() => billingAddress.split(/\r?\n/).filter(Boolean), [billingAddress])
   const totalAmount = useMemo(() => items.reduce((sum, item) => sum + Number(item.price || 0), 0), [items])
@@ -349,9 +368,8 @@ function App() {
                   customers={customers}
                 />
               } />
-              <Route path="/past-invoices" element={<PastInvoicesPage isAddRecordOpen={isAddRecordOpen} />} />
+              <Route path="/transactions" element={<TransactionManagerPage isAddRecordOpen={isAddRecordOpen} forceEditId={forceEditId} setForceEditId={setForceEditId} />} />
               <Route path="/clients" element={<ClientManagerPage isAddClientOpen={isAddClientOpen} setIsAddClientOpen={setIsAddClientOpen} />} />
-              <Route path="/tracker" element={<TransactionTrackerPage />} />
             </Routes>
           </div>
         </section>

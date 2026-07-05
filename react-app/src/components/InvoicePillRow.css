@@ -103,70 +103,70 @@
   font-size: 14px;
 }
 
-.pill-action {
+.pill-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   max-width: 0;
-  opacity: 0;
   overflow: hidden;
+  opacity: 0;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  white-space: nowrap;
   margin-left: 0;
 }
 
-.invoice-pill-wrapper:hover .pill-action {
+.invoice-pill-wrapper:hover .pill-actions-group {
   max-width: 200px;
   opacity: 1;
   margin-left: 8px;
 }
 
-.pill-action .success-button {
-  border-top-left-radius: 8px;
-  border-bottom-left-radius: 8px;
-  border-top-right-radius: 32px;
-  border-bottom-right-radius: 32px;
+.pill-actions-group button.icon-only {
   height: 48px;
-  background: var(--green-strong);
-  color: white;
-  border: none;
-  padding: 0 20px;
+  width: 48px;
+  border-radius: 24px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 650;
-  font-size: 14px;
+  justify-content: center;
+  border: none;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  color: white;
 }
 
-.pill-action .success-button:hover {
+.pill-actions-group button.icon-only .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.pill-actions-group .success-button {
+  background: var(--green-strong);
+}
+.pill-actions-group .success-button:hover {
   background: var(--green);
 }
 
-.pill-action .success-button .material-symbols-outlined,
-.pill-action .pending-button .material-symbols-outlined {
-  font-size: 18px;
-}
-
-.pill-action .pending-button {
-  border-top-left-radius: 8px;
-  border-bottom-left-radius: 8px;
-  border-top-right-radius: 32px;
-  border-bottom-right-radius: 32px;
-  height: 48px;
+.pill-actions-group .pending-button {
   background: var(--panel-deep);
-  color: var(--text);
-  border: 1px solid var(--border);
-  padding: 0 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 650;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.2s;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+}
+.pill-actions-group .pending-button:hover {
+  background: var(--panel-soft);
 }
 
-.pill-action .pending-button:hover {
+.pill-actions-group .edit-button {
+  background: var(--panel-deep);
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+}
+.pill-actions-group .edit-button:hover {
   background: var(--panel-soft);
+}
+
+.pill-actions-group .delete-button {
+  background: var(--alert-red, #ff4a4a);
+}
+.pill-actions-group .delete-button:hover {
+  background: #ff3333;
 }
 
 /* Mobile Responsiveness */

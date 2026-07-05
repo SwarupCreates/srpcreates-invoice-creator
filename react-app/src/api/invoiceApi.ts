@@ -10,9 +10,9 @@ export const invoiceApi = {
   
   update: (invoiceData: Partial<Invoice>) => api.post<Invoice>('updateInvoice', invoiceData),
   
-  delete: (id: string) => api.post<null>('deleteInvoice', { id }),
+  delete: (id: string) => api.post<{ id: string }>('deleteInvoice', { id }),
   
-  markPaid: (id: string) => api.post<null>('markInvoicePaid', { id }),
+  markPaid: (id: string) => api.post<{ id: string, status: string }>('markInvoicePaid', { id }),
 
   markPending: (id: string) => api.post<null>('markInvoicePending', { id })
 };
