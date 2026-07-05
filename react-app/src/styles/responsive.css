@@ -1,0 +1,106 @@
+@media (max-width: 1320px) {
+  .dashboard-grid,
+  .tool-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-card {
+    min-height: auto;
+  }
+
+  .invoice-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-panel {
+    position: static;
+  }
+
+  .preview-scroll {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 980px) {
+  .app-shell {
+    padding: 14px;
+  }
+
+  .workspace-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .studio-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .page-title-pill {
+    width: 100%;
+  }
+
+  .pending-row,
+  .pending-row.empty {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+  }
+
+  .pending-row > span:not(.pending-icon),
+  .pending-row .success-button {
+    grid-column: 2 / -1;
+  }
+}
+
+@media (max-width: 680px) {
+  .studio-section,
+  .editor-panel,
+  .preview-panel {
+    border-radius: 26px;
+    padding: 18px;
+  }
+
+  .studio-wordmark {
+    font-size: 21px;
+  }
+
+  .studio-wordmark img {
+    width: 38px;
+  }
+
+  .page-title-pill {
+    min-width: 0;
+    padding: 0 20px;
+  }
+
+  .panel-heading,
+  .preview-toolbar,
+  .items-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .form-grid,
+  .item-editor-head,
+  .item-editor-row {
+    grid-template-columns: 1fr;
+  }
+
+  .item-editor-head {
+    display: none;
+  }
+
+  .item-editor-row .icon-button {
+    width: 100%;
+  }
+
+  .amount-lockup {
+    flex-wrap: wrap;
+  }
+
+  .amount-lockup strong {
+    font-size: 3rem;
+  }
+
+  .pending-row.empty {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+}

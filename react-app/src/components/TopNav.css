@@ -1,0 +1,71 @@
+.app-topbar {
+  min-height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 14px 12px 31px;
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+}
+
+.session-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 17px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 16px;
+  font-weight: 760;
+}
+
+.session-chip > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-chip i {
+  width: 1px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.session-chip img,
+.avatar-fallback {
+  width: 41px;
+  height: 41px;
+  border-radius: 50%;
+}
+
+.session-chip img {
+  object-fit: cover;
+}
+
+.avatar-fallback {
+  display: grid;
+  place-items: center;
+  background: #d9d9d9;
+  color: #595959;
+}
+
+@media (max-width: 980px) {
+  .app-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 680px) {
+  .app-topbar {
+    border-radius: 26px;
+    padding: 18px;
+  }
+
+  .session-chip {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

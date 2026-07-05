@@ -1,0 +1,316 @@
+:root {
+  color-scheme: dark;
+  --space-page: 20px;
+  --page: #000000;
+  --panel: #ffffff16;
+  --panel-deep: #ffffff10;
+  --panel-soft: #ffffff16;
+  --control: #3b3b3b;
+  --control-hover: #484848;
+  --text: #f7f7f7;
+  --text-soft: #cfcfcf;
+  --text-muted: #8f8f93;
+  --line: rgba(255, 255, 255, 0.08);
+  --gold: #f4d23d;
+  --green: #20bd67;
+  --green-strong: #089650;
+  --red: #4c1f20;
+  --alert-red: #ff4a4a; /* Added for benchmark lows */
+  --alert-orange: #ff9800; /* Added for benchmark lows */
+  --radius-shell: 34px;
+  --radius-card: 32px; /* Adjusted to 32px as per design specs */
+  --radius-pill: 36px;
+  --shadow-soft: 0 26px 70px rgba(0, 0, 0, 0.42);
+  font-family: "Urbanist", sans-serif;
+  font-optical-sizing: auto;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--page);
+  color: var(--text);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: "Urbanist", sans-serif;
+  font-optical-sizing: auto;
+  letter-spacing: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+/* Added transition for smooth hover states */
+.material-symbols-outlined {
+  color: currentColor;
+  flex: 0 0 auto;
+  font-size: 25px;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  transition: font-variation-settings 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+}
+
+.material-symbols-outlined[data-filled="true"] {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* Fill icons on hover for all interactive elements automatically */
+button:hover .material-symbols-outlined:not([data-filled="true"]),
+button:active .material-symbols-outlined:not([data-filled="true"]) {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.studio-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.studio-wordmark img {
+  width: 45px;
+  height: auto;
+  flex: 0 0 auto;
+}
+
+.studio-wordmark .wordmark-bold {
+  font-weight: 760;
+}
+
+.studio-wordmark.muted {
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 23px;
+}
+
+.studio-wordmark.muted img {
+  width: 32px;
+  margin-top: 1px;
+}
+
+.primary-button,
+.secondary-button,
+.icon-text-button,
+.icon-button,
+.success-button,
+.tool-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 59px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 650;
+  transition: background-color 150ms ease, color 150ms ease, opacity 150ms ease, transform 150ms ease;
+}
+
+.form-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 59px;
+  border-radius: calc(var(--radius-pill)/2);
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 650;
+  transition: background-color 150ms ease, color 150ms ease, opacity 150ms ease, transform 150ms ease;
+}
+
+.form-button {
+  background: #ffffff;
+  color: #050505;
+  padding: 0 24px;
+}
+
+.form-button:hover {
+  background: #ececec;
+}
+
+.primary-button {
+  background: #ffffff;
+  color: #050505;
+  padding: 0 25px;
+}
+
+.primary-button:hover {
+  background: #ececec;
+}
+
+.secondary-button,
+.icon-text-button {
+  background: var(--control);
+  color: var(--text);
+  padding: 0 22px;
+}
+
+.secondary-button:hover,
+.icon-text-button:hover,
+.tool-button:hover {
+  background: var(--control-hover);
+}
+
+.icon-button {
+  width: 46px;
+  min-height: 46px;
+  background: #313131;
+  color: var(--text-soft);
+}
+
+.icon-button:hover {
+  background: #3f3f3f;
+  color: var(--text);
+}
+
+.icon-button.danger:hover {
+  color: #ff8f8f;
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--page);
+}
+
+main.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  border-radius: var(--radius-shell);
+  background: var(--panel);
+  /* The space for top padding */
+  padding: var(--space-page) var(--space-page) 30px;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  opacity: 0;
+}
+
+.login-panel {
+  width: min(100%, 460px);
+  display: grid;
+  gap: 26px;
+  padding: 34px;
+  border-radius: 32px;
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.login-panel p {
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 760;
+}
+
+.login-panel h1 {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: clamp(2.4rem, 8vw, 4rem);
+  line-height: 1;
+}
+
+.app-shell {
+  height: 100dvh;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-page);
+  overflow: hidden;
+  padding: var(--space-page);
+  background: var(--page);
+  color: var(--text);
+}
+
+.studio-layout {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 318px minmax(0, 1fr);
+  gap: var(--space-page);
+}
+
+.workspace {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-page);
+  align-content: start;
+  overflow: hidden;
+}
+
+.workspace-header {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-page);
+}
+
+.page-title-pill {
+  width: 100%;
+  min-height: 59px;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 31px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, #ffffff12 0%, #ffffff00 100%);
+}
+
+.page-title-pill h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1;
+}
