@@ -71,12 +71,19 @@ function DashboardMetricCard({
 
       <div className={`metric-list ${listClassName || ''}`}>
         {items.length ? (
-          items.map((item) => (
-            <div className="metric-row" key={item.label}>
+          items.map((item, idx) => (
+            <div className="metric-row" key={item.label + idx}>
               <span className={`status-dot ${itemAccent}`}>
                 <StudioIcon name={itemIcon} filled />
               </span>
-              <span className="metric-label">{item.label}</span>
+              <div className="metric-label-group" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                <span className="metric-label" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
+                {item.subLabel && (
+                  <span className="metric-sublabel" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    {item.subLabel}
+                  </span>
+                )}
+              </div>
               <span>{formatTotal(item.amount)} INR</span>
             </div>
           ))
@@ -221,8 +228,14 @@ export function DashboardPage({
     return {
       totalEarnings: paid.reduce((sum, inv) => sum + inv.totalAmount, 0),
       pendingAmounts: pending.reduce((sum, inv) => sum + inv.totalAmount, 0),
-      settledItems: paid.map(inv => ({ label: inv.id, amount: inv.totalAmount })),
-      pendingItems: pending.map(inv => ({ label: inv.id, amount: inv.totalAmount })),
+      settledItems: paid.map(inv => ({ 
+        label: inv.customerName.length > 12 ? inv.customerName.substring(0, 12) + '...' : inv.customerName, 
+        amount: inv.totalAmount 
+      })),
+      pendingItems: pending.map(inv => ({ 
+        label: inv.customerName.length > 12 ? inv.customerName.substring(0, 12) + '...' : inv.customerName, 
+        amount: inv.totalAmount 
+      })),
       pendingInvoicesData: pending
     };
   }, [filteredInvoices]);

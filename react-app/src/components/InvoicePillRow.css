@@ -71,7 +71,7 @@
 .status-fulfilled { color: #4caf50; }
 .status-cancelled { color: #f44336; }
 
-.pill-id {
+.pill-highlight {
   font-weight: 760;
   color: var(--text);
   font-size: 14px;
