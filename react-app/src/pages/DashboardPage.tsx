@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { StudioIcon, formatTotal } from './shared'
 import { useFinance } from '../context/FinanceContext'
 import { InvoicePillRow } from '../components/InvoicePillRow'
+import { IncomeChartCard } from '../components/IncomeChartCard'
 import type { Invoice } from '../api/types'
 
 export type DashboardLineItem = {
@@ -76,14 +77,7 @@ function DashboardMetricCard({
               <span className={`status-dot ${itemAccent}`}>
                 <StudioIcon name={itemIcon} filled />
               </span>
-              <div className="metric-label-group" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-                <span className="metric-label" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
-                {item.subLabel && (
-                  <span className="metric-sublabel" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                    {item.subLabel}
-                  </span>
-                )}
-              </div>
+              <span className="metric-label" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>
               <span>{formatTotal(item.amount)} INR</span>
             </div>
           ))
@@ -260,7 +254,6 @@ export function DashboardPage({
   const forecastProgress = monthlyBenchmark > 0 
     ? Math.min((predictedTotal / (monthlyBenchmark * 1.5)) * 100, 100) 
     : 0;
-
   return (
     <div className="dashboard-page">
       <div className="dashboard-grid">
@@ -313,6 +306,8 @@ export function DashboardPage({
           <RatingCard predictedTotal={predictedTotal} benchmark={monthlyBenchmark} />
         </article>
       </div>
+
+      <IncomeChartCard invoices={invoices} />
 
       <RecentPendingInvoices invoices={pendingInvoicesData} onOpenInvoice={setSelectedInvoiceId} onDismiss={handleDismissPending} />
       <MoreTools onCreateInvoice={onCreateInvoice} onChangeBenchmark={() => setIsBenchmarkModalOpen(true)} />

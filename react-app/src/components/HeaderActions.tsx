@@ -19,6 +19,8 @@ export function HeaderActions({
   toggleAddRecord,
   isAddRecordOpen,
   isAddClientOpen,
+  isChartOpen,
+  toggleChart,
 }: {
   fromDate: string;
   toDate: string;
@@ -34,6 +36,8 @@ export function HeaderActions({
   toggleAddRecord?: () => void;
   isAddRecordOpen?: boolean;
   isAddClientOpen?: boolean;
+  isChartOpen?: boolean;
+  toggleChart?: () => void;
 }) {
   const location = useLocation();
   const { invoices, refreshInvoices, isLoadingInvoices, customers, refreshCustomers, isLoadingCustomers } = useFinance();
@@ -143,6 +147,10 @@ export function HeaderActions({
         <button type="button" className="secondary-button" onClick={handleCsvExport}>
           <StudioIcon name="download" />
           Export in Excel
+        </button>
+        <button type="button" className={isChartOpen ? "primary-button" : "secondary-button"} onClick={toggleChart}>
+          <StudioIcon name={isChartOpen ? "close" : "show_chart"} />
+          {isChartOpen ? "Close Chart" : "View Chart"}
         </button>
         <button type="button" className={isAddRecordOpen ? "secondary-button" : "primary-button"} onClick={toggleAddRecord}>
           <StudioIcon name={isAddRecordOpen ? "close" : "add"} />

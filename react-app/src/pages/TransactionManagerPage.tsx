@@ -5,10 +5,11 @@ import { StudioIcon, toInputDate, getNextInvoiceCount, formatInvoiceNumber } fro
 import { CustomDropdown } from '../components/CustomDropdown';
 import type { Invoice } from '../api/types';
 import { InvoicePillRow } from '../components/InvoicePillRow';
+import { IncomeChartCard } from '../components/IncomeChartCard';
 import { useNavigate } from 'react-router-dom';
 import '../styles/TransactionManagerPage.css';
 
-export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, forceEditId, setForceEditId }: { isAddRecordOpen?: boolean, setIsAddRecordOpen?: (v: boolean) => void, forceEditId?: string, setForceEditId?: (id: string) => void }) {
+export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, isChartOpen, forceEditId, setForceEditId }: { isAddRecordOpen?: boolean, setIsAddRecordOpen?: (v: boolean) => void, isChartOpen?: boolean, forceEditId?: string, setForceEditId?: (id: string) => void }) {
   const { invoices, isLoadingInvoices, markInvoicePaid, markInvoicePending, addInvoice, updateInvoice, deleteInvoice, customers } = useFinance();
   const navigate = useNavigate();
 
@@ -250,6 +251,10 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
             </div>
           </form>
         </section>
+      </div>
+
+      <div className={`chart-drawer ${isChartOpen ? 'open' : ''}`}>
+        <IncomeChartCard invoices={invoices} isCollapsible={false} />
       </div>
 
       <div className="past-invoices-list-container">

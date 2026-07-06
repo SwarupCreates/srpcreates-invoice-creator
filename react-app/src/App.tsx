@@ -31,19 +31,16 @@ import { useFinance } from './context/FinanceContext'
 function App() {
   const initialDate = toInputDate(new Date())
   
-  // Dynamically calculate the last day of the previous month for the default From Date
-  const lastDayOfLastMonth = useMemo(() => {
-    const today = new Date();
-    // Setting day to 0 in Date constructor gives the last day of the previous month
-    return toInputDate(new Date(today.getFullYear(), today.getMonth(), 0));
-  }, []);
-
   const [user, setUser] = useState<UserProfile | null>(null)
   const [invoiceDate, setInvoiceDate] = useState(initialDate)
   const [invoiceId, setInvoiceId] = useState('')
   
   // Dashboard Date Range State initialized dynamically
-  const [fromDate, setFromDate] = useState(lastDayOfLastMonth)
+  const [fromDate, setFromDate] = useState<string>(() => {
+    const d = new Date()
+    d.setMonth(d.getMonth() - 1)
+    return d.toISOString().split('T')[0]
+  })
   const [toDate, setToDate] = useState(initialDate)
   
   // Refs to trigger the native date pickers seamlessly
@@ -60,9 +57,10 @@ function App() {
   })
   const [items, setItems] = useState<InvoiceItem[]>(starterItems)
 
-  const [isAddRecordOpen, setIsAddRecordOpen] = useState(false)
-  const [isAddClientOpen, setIsAddClientOpen] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isAddRecordOpen, setIsAddRecordOpen] = useState(false)
+  const [isChartOpen, setIsChartOpen] = useState(false)
+  const [isAddClientOpen, setIsAddClientOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   
@@ -429,6 +427,8 @@ function App() {
               toggleAddRecord={() => location.pathname === '/clients' ? setIsAddClientOpen(prev => !prev) : setIsAddRecordOpen(prev => !prev)}
               isAddRecordOpen={isAddRecordOpen}
               isAddClientOpen={isAddClientOpen}
+              isChartOpen={isChartOpen}
+              toggleChart={() => setIsChartOpen(prev => !prev)}
             />
           </header>
 
@@ -494,7 +494,7 @@ function App() {
                   isLoading={isLoadingInvoiceDetails}
                 />
               } />
-              <Route path="/transactions" element={<TransactionManagerPage isAddRecordOpen={isAddRecordOpen} setIsAddRecordOpen={setIsAddRecordOpen} forceEditId={forceEditId} setForceEditId={setForceEditId} />} />
+              <Route path="/transactions" element={<TransactionManagerPage isAddRecordOpen={isAddRecordOpen} setIsAddRecordOpen={setIsAddRecordOpen} isChartOpen={isChartOpen} forceEditId={forceEditId} setForceEditId={setForceEditId} />} />
               <Route path="/clients" element={<ClientManagerPage isAddClientOpen={isAddClientOpen} setIsAddClientOpen={setIsAddClientOpen} />} />
             </Routes>
           </div>
