@@ -55,13 +55,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const CustomLegend = ({ clients }: any) => {
   return (
     <div className="custom-chart-legend" style={{ display: 'flex', justifyContent: 'space-between', gap: '64px', marginTop: '24px', alignItems: 'flex-start', paddingBottom: '0px', marginLeft: '24px', marginBottom: '-20px' }}>
-      <div className="legend-clients" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="legend-clients" style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0, flex: 1 }}>
         {clients.map((client: string, idx: number) => {
           const color = PREDEFINED_COLORS[idx % PREDEFINED_COLORS.length];
           return (
-            <div key={client} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <span style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: color }} />
-              <span style={{ color: color, fontSize: '16px', fontWeight: 650 }}>{client}</span>
+            <div key={client} style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0 }}>
+              <span style={{ width: '18px', height: '18px', flexShrink: 0, borderRadius: '50%', backgroundColor: color }} />
+              <span style={{ color: color, fontSize: '16px', fontWeight: 650, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client}</span>
             </div>
           );
         })}
