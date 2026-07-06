@@ -129,9 +129,9 @@ export function DetailLine({ line }: { line: string }) {
   return <p>{line}</p>
 }
 
-export function StudioIcon({ name, filled = false }: { name: string; filled?: boolean }) {
+export function StudioIcon({ name, filled = false, className = '' }: { name: string; filled?: boolean; className?: string }) {
   return (
-    <span className="material-symbols-outlined" data-filled={filled ? 'true' : 'false'} aria-hidden="true">
+    <span className={`material-symbols-outlined ${className}`.trim()} data-filled={filled ? 'true' : 'false'} aria-hidden="true">
       {name}
     </span>
   )
