@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useFinance } from '../context/FinanceContext';
 import { StudioIcon, toInputDate, getNextInvoiceCount, formatInvoiceNumber } from './shared';
 import { CustomDropdown } from '../components/CustomDropdown';
@@ -15,6 +16,11 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
 
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const clientInputRef = useRef<HTMLDivElement>(null);
+  const [clientDropdownCoords, setClientDropdownCoords] = useState({ top: 0, left: 0, width: 0 });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     id: '',
@@ -24,6 +30,17 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
     totalAmount: '',
     status: 'Pending' as Invoice['status']
   });
+
+  useLayoutEffect(() => {
+    if (showClientDropdown && clientInputRef.current) {
+      const rect = clientInputRef.current.getBoundingClientRect();
+      setClientDropdownCoords({
+        left: rect.left,
+        top: rect.bottom + 4,
+        width: rect.width
+      });
+    }
+  }, [showClientDropdown, formData.customerName]);
 
   // Initialize auto-generated id when invoices load OR when forceEditId changes
   useEffect(() => {
@@ -83,8 +100,10 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
 
   const handleDeleteConfirm = async () => {
     if (transactionToDelete) {
+      setIsDeleting(true);
       await deleteInvoice(transactionToDelete);
       setTransactionToDelete(null);
+      setIsDeleting(false);
     }
   };
 
@@ -159,7 +178,7 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
               <StudioIcon name="calendar_month" />
               <input type="date" name="date" value={formData.date} onChange={handleInputChange} onClick={(e) => { try { e.currentTarget.showPicker(); } catch (err) {} }} required />
             </div>
-            <div className="inline-form-group" style={{ position: 'relative' }}>
+            <div className="inline-form-group" style={{ position: 'relative' }} ref={clientInputRef}>
               <StudioIcon name="person" />
               <input 
                 type="text" 
@@ -172,12 +191,16 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
                 required 
                 autoComplete="off"
               />
-              {showClientDropdown && customers.length > 0 && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--panel-deep)', border: '1px solid var(--line)', borderRadius: '12px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', marginTop: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+              {showClientDropdown && customers.length > 0 && createPortal(
+                <div style={{ position: 'fixed', top: clientDropdownCoords.top, left: clientDropdownCoords.left, width: clientDropdownCoords.width, background: 'rgba(26, 26, 26, 0.9)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--line)', borderRadius: '12px', zIndex: 10000, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', margin: 0 }}>
                   {customers.filter(c => c.name.toLowerCase().includes(formData.customerName.toLowerCase())).map(c => (
                     <div 
                       key={c.id} 
-                      onClick={() => setFormData(prev => ({ ...prev, customerName: c.name }))}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setFormData(prev => ({ ...prev, customerName: c.name }));
+                        setShowClientDropdown(false);
+                      }}
                       style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
                       onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
@@ -185,7 +208,8 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
                       {c.name}
                     </div>
                   ))}
-                </div>
+                </div>,
+                document.body
               )}
             </div>
             <div className="inline-form-group">
@@ -270,12 +294,13 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
               <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>
                 Are you sure you want to delete <strong>{transactionToDelete}</strong>? This cannot be undone.
               </p>
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                <button type="button" className="action-button secondary" onClick={() => setTransactionToDelete(null)}>
+              <div className="invoice-actions" style={{ justifyContent: 'center' }}>
+                <button type="button" className="secondary-button" onClick={() => setTransactionToDelete(null)} disabled={isDeleting}>
                   Cancel
                 </button>
-                <button type="button" className="action-button danger" onClick={handleDeleteConfirm} style={{ background: 'var(--alert-red, #ff4a4a)' }}>
-                  Delete
+                <button type="button" className="primary-button" onClick={handleDeleteConfirm} disabled={isDeleting} style={{ background: 'var(--alert-red, #ff4a4a)', border: 'none', color: '#fff' }}>
+                  <StudioIcon name={isDeleting ? "hourglass_empty" : "delete"} />
+                  {isDeleting ? 'Deleting...' : 'Delete Record'}
                 </button>
               </div>
             </div>

@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { StudioIcon } from '../pages/shared';
 import './CustomDropdown.css';
 
@@ -19,18 +20,48 @@ interface CustomDropdownProps {
 export function CustomDropdown({ value, onChange, options, placeholder = "Select an option", className = '' }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
 
   const selectedOption = options.find(o => o.value === value);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+      if (containerRef.current && containerRef.current.contains(event.target as Node)) {
+        return;
       }
+      const target = event.target as HTMLElement;
+      if (target.closest('.dropdown-menu-container')) {
+        return;
+      }
+      setIsOpen(false);
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      // Close on scroll as a simple reliable way to prevent floating menus when scrolling the page
+      const handleScroll = (e: Event) => {
+        if (!(e.target as HTMLElement).closest?.('.dropdown-menu')) {
+          setIsOpen(false);
+        }
+      };
+      window.addEventListener('scroll', handleScroll, true);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        window.removeEventListener('scroll', handleScroll, true);
+      };
+    }
+  }, [isOpen]);
+
+  useLayoutEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setCoords({
+        left: rect.left,
+        top: rect.bottom + 8,
+        width: rect.width
+      });
+    }
+  }, [isOpen]);
 
   return (
     <div className={`custom-dropdown ${className} ${isOpen ? 'open' : ''}`} ref={containerRef}>
@@ -47,8 +78,17 @@ export function CustomDropdown({ value, onChange, options, placeholder = "Select
         <StudioIcon name="expand_more" className={`dropdown-icon ${isOpen ? 'rotated' : ''}`} />
       </button>
 
-      {isOpen && (
-        <div className="dropdown-menu-container">
+      {isOpen && createPortal(
+        <div 
+          className="dropdown-menu-container" 
+          style={{ 
+            position: 'fixed', 
+            top: coords.top, 
+            left: coords.left, 
+            width: coords.width,
+            margin: 0
+          }}
+        >
           <ul className="dropdown-menu" role="listbox">
             {options.map((option) => (
               <li 
@@ -68,7 +108,8 @@ export function CustomDropdown({ value, onChange, options, placeholder = "Select
               </li>
             ))}
           </ul>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
