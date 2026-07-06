@@ -99,12 +99,14 @@ label {
   color: var(--text-muted);
   font-size: 13px;
   font-weight: 760;
+  min-width: 0;
 }
 
 input,
 select,
 textarea {
   width: 100%;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: #202020;
@@ -112,6 +114,8 @@ textarea {
   outline: none;
   padding: 12px 13px;
   font-size: 15px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 input:focus,

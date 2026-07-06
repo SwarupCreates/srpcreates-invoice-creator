@@ -1,10 +1,13 @@
+import { Link } from 'react-router-dom';
 import { FinanceStudioWordmark, StudioIcon, type UserProfile } from '../pages/shared';
 import './TopNav.css';
 
 export function TopNav({ user, onToggleSidebar }: { user: UserProfile, onToggleSidebar: () => void }) {
   return (
     <header className="app-topbar">
-      <FinanceStudioWordmark />
+      <Link to="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+        <FinanceStudioWordmark />
+      </Link>
       <div className="spacer" />
       <div className="session-chip">
         <span className="hide-mobile">Logged in as {user.login}</span>

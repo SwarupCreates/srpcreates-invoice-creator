@@ -309,7 +309,7 @@ main.content {
   display: inline-flex;
   align-items: center;
   gap: 11px;
-  padding: 0 31px;
+  padding: 0 20px;
   border-radius: var(--radius-pill);
   background: linear-gradient(90deg, #ffffff12 0%, #ffffff00 100%);
 }

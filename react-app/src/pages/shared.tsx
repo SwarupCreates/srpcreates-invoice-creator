@@ -38,7 +38,7 @@ export const defaultTypes = ['Static', 'Reel', 'Design', 'Consulting']
 export const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
   { id: 'invoice', label: 'Create New Invoice', icon: 'add_circle', path: '/invoice' },
-  { id: 'pastInvoices', label: 'Transaction Manager', icon: 'history', path: '/transactions' },
+  { id: 'pastInvoices', label: 'Transactions', icon: 'history', path: '/transactions' },
   { id: 'clients', label: 'Client Manager', icon: 'person', path: '/clients' }
 ]
 

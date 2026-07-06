@@ -81,8 +81,10 @@ export function IncomeChartCard({ invoices, isCollapsible = false }: { invoices:
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             {chartTimeRange === 'custom' && (
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <div className="date-pill custom-chart-date">
-                  <span>From</span>
+                <div className="custom-chart-date">
+                  <span>
+                    {customChartFrom ? new Date(customChartFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'From'}
+                  </span>
                   <StudioIcon name="calendar_month" />
                   <input
                     type="date"
@@ -90,8 +92,10 @@ export function IncomeChartCard({ invoices, isCollapsible = false }: { invoices:
                     onChange={(e) => setCustomChartFrom(e.target.value)}
                   />
                 </div>
-                <div className="date-pill custom-chart-date">
-                  <span>To</span>
+                <div className="custom-chart-date">
+                  <span>
+                    {customChartTo ? new Date(customChartTo).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'To'}
+                  </span>
                   <StudioIcon name="calendar_month" />
                   <input
                     type="date"
