@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { defaultTypes, formatDisplayDate, formatLineAmount, formatTotal, DetailLine, StudioIcon, MailIcon, PhoneIcon, GlobeIcon, bankDetails, invoicePreviewAssets, type ContactInfo, type InvoiceItem } from './shared'
+import { CustomDropdown } from '../components/CustomDropdown'
 
 export function InvoicePage({
   invoiceDate,
@@ -108,7 +109,7 @@ export function InvoicePage({
         <div className="form-grid compact">
           <label>
             <span>Date</span>
-            <input type="date" value={invoiceDate} onChange={(event) => setInvoiceDate(event.target.value)} />
+            <input type="date" value={invoiceDate} onChange={(event) => setInvoiceDate(event.target.value)} onClick={(e) => { try { e.currentTarget.showPicker(); } catch (err) {} }} />
           </label>
           <label>
             <span>invoice_id</span>
@@ -127,17 +128,15 @@ export function InvoicePage({
         <div className="form-grid">
           <label className="wide">
             <span>Select Client</span>
-            <select 
-              value={selectedClientId} 
-              onChange={(e) => onClientSelect(e.target.value)}
-              style={{ padding: '12px', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '12px', fontFamily: 'inherit' }}
-            >
-              <option value="" disabled>Please select a client</option>
-              <option value="NEW">-- Create New Client --</option>
-              {customers.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <CustomDropdown
+              value={selectedClientId}
+              onChange={(value) => onClientSelect(value)}
+              placeholder="Please select a client"
+              options={[
+                { label: "-- Create New Client --", value: "NEW" },
+                ...customers.map(c => ({ label: c.name, value: c.id }))
+              ]}
+            />
           </label>
         </div>
 
@@ -201,13 +200,11 @@ export function InvoicePage({
           {items.map((item) => (
             <div key={item.id} className="item-editor-row">
               <input type="text" value={item.description} onChange={(event) => updateItem(item.id, 'description', event.target.value)} placeholder="Job item" />
-              <select value={item.type} onChange={(event) => updateItem(item.id, 'type', event.target.value)}>
-                {defaultTypes.map((typeOption) => (
-                  <option key={typeOption} value={typeOption}>
-                    {typeOption}
-                  </option>
-                ))}
-              </select>
+              <CustomDropdown
+                value={item.type}
+                onChange={(value) => updateItem(item.id, 'type', value)}
+                options={defaultTypes.map(typeOption => ({ label: typeOption, value: typeOption }))}
+              />
               <input type="number" min="0" value={item.price} onChange={(event) => updateItem(item.id, 'price', event.target.value)} placeholder="0" />
               <button type="button" className="icon-button danger" onClick={() => removeItem(item.id)} aria-label="Remove row">
                 <StudioIcon name="delete" />

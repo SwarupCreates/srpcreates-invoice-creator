@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { StudioIcon, toInputDate, getNextInvoiceCount, formatInvoiceNumber } from './shared';
+import { CustomDropdown } from '../components/CustomDropdown';
 import type { Invoice } from '../api/types';
 import { InvoicePillRow } from '../components/InvoicePillRow';
 import { useNavigate } from 'react-router-dom';
@@ -156,7 +157,7 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
             </div>
             <div className="inline-form-group">
               <StudioIcon name="calendar_month" />
-              <input type="date" name="date" value={formData.date} onChange={handleInputChange} required />
+              <input type="date" name="date" value={formData.date} onChange={handleInputChange} onClick={(e) => { try { e.currentTarget.showPicker(); } catch (err) {} }} required />
             </div>
             <div className="inline-form-group" style={{ position: 'relative' }}>
               <StudioIcon name="person" />
@@ -197,11 +198,15 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, fo
             </div>
             <div className="inline-form-group">
               <StudioIcon name="currency_rupee" />
-              <select name="status" value={formData.status} onChange={handleInputChange}>
-                <option value="Pending">Status: Pending</option>
-                <option value="Fulfilled">Status: Fulfilled</option>
-                <option value="Cancelled">Status: Cancelled</option>
-              </select>
+              <CustomDropdown
+                value={formData.status}
+                onChange={(value) => handleInputChange({ target: { name: 'status', value } } as any)}
+                options={[
+                  { label: "Status: Pending", value: "Pending" },
+                  { label: "Status: Fulfilled", value: "Fulfilled" },
+                  { label: "Status: Cancelled", value: "Cancelled" }
+                ]}
+              />
             </div>
             <div className="form-actions-row" style={{ display: 'flex', gap: '8px' }}>
               <button type="submit" className="inline-submit-btn" disabled={isSubmitting} title="Save Record" style={{ flex: 1 }}>

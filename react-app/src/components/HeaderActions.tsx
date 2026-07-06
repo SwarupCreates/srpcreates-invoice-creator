@@ -69,6 +69,13 @@ export function HeaderActions({
             type="date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
+            onClick={(e) => {
+              try {
+                if ('showPicker' in e.target) {
+                  (e.target as HTMLInputElement).showPicker();
+                }
+              } catch (err) {}
+            }}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: 10 }}
           />
         </div>
@@ -83,6 +90,13 @@ export function HeaderActions({
             type="date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
+            onClick={(e) => {
+              try {
+                if ('showPicker' in e.target) {
+                  (e.target as HTMLInputElement).showPicker();
+                }
+              } catch (err) {}
+            }}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: 10 }}
           />
         </div>

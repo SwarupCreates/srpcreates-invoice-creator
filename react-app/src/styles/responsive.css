@@ -9,15 +9,27 @@
   }
 
   .invoice-workspace {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .editor-panel,
+  .preview-panel {
+    height: auto;
+    min-height: fit-content;
+    overflow: visible;
   }
 
   .preview-panel {
-    position: static;
+    display: flex;
+    flex-direction: column;
   }
 
   .preview-scroll {
     justify-content: flex-start;
+    overflow: visible;
+    height: auto;
   }
 }
 
@@ -33,6 +45,7 @@
 
   .studio-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
     gap: 0;
   }
 

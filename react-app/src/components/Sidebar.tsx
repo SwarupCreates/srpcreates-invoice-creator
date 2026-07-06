@@ -5,7 +5,8 @@ import './Sidebar.css';
 export function Sidebar({ isOpen, onClose, onLogout }: { isOpen?: boolean, onClose?: () => void, onLogout: () => void }) {
   return (
     <aside className={`side-rail ${isOpen ? 'open' : ''}`}>
-      <nav className="rail-nav" aria-label="Workspace">
+      <div className="side-rail-inner">
+        <nav className="rail-nav" aria-label="Workspace">
         {navItems.map((item) => (
           <NavLink
             key={item.id}
@@ -34,6 +35,7 @@ export function Sidebar({ isOpen, onClose, onLogout }: { isOpen?: boolean, onClo
           <StudioIcon name="logout" />
           Sign Out
         </button>
+      </div>
       </div>
     </aside>
   );
