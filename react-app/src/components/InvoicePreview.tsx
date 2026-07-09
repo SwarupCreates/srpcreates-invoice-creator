@@ -47,7 +47,10 @@ export function InvoicePreview({
     email: 'srpcreates@gmail.com',
     phone: '9051477045',
     website: 'srpcreates.framer.website',
-    address: '' // not displayed in header currently
+    address: '',
+    pan: '',
+    gstin: '',
+    upiId: ''
   };
 
   const bankInfoArray = settings?.bankInfo 
@@ -56,8 +59,21 @@ export function InvoicePreview({
         ['ACC NO.:', settings.bankInfo.accountNo],
         ['BANK(BRANCH):', settings.bankInfo.bankBranch],
         ['IFSC CODE:', settings.bankInfo.ifscCode]
-      ]
+      ].filter(item => item[1]) // Hide empty rows
     : bankDetails;
+
+  if (personalInfo.upiId) {
+    bankInfoArray.push(['UPI ID:', personalInfo.upiId]);
+  }
+  if (personalInfo.pan) {
+    bankInfoArray.push(['PAN NO.:', personalInfo.pan]);
+  }
+  if (personalInfo.gstin) {
+    bankInfoArray.push(['GSTIN:', personalInfo.gstin]);
+  }
+  if (personalInfo.address) {
+    bankInfoArray.push(['ADDRESS:', personalInfo.address]);
+  }
 
   useEffect(() => {
     const container = previewContainerRef.current;
@@ -96,11 +112,10 @@ export function InvoicePreview({
             {settings?.logoSvg ? (
               <div 
                 className="invoice-logo custom-logo" 
-                style={{ width: 'auto', height: '60px', display: 'flex', alignItems: 'center' }} 
                 dangerouslySetInnerHTML={{ __html: settings.logoSvg }} 
               />
             ) : (
-              <img src={invoicePreviewAssets.letterheadLogo} alt="SRP Creates" className="invoice-logo" />
+              <img src={invoicePreviewAssets.letterheadLogo} alt="Logo" className="invoice-logo" />
             )}
             <div className="invoice-title-block">
               <h2>INVOICE</h2>
@@ -194,7 +209,7 @@ export function InvoicePreview({
               <div className="invoice-signature">
                 <img src={invoicePreviewAssets.signatureImage} alt="" />
                 <div />
-                <span className="sig-name">{personalInfo.name || 'SWARUP RANJAN PAUL'}</span>
+                <span className="sig-name">{personalInfo.name || 'YOUR NAME'}</span>
               </div>
             </footer>
           </main>

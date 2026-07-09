@@ -5,7 +5,11 @@
 const SheetService = {
   getSheet: function(sheetName) {
     const ss = SpreadsheetApp.openById(Config.SPREADSHEET_ID);
-    return ss.getSheetByName(sheetName);
+    let sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+    }
+    return sheet;
   },
 
   getHeaders: function(sheet) {

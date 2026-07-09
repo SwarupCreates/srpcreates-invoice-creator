@@ -1,3 +1,15 @@
+:root {
+  /* =========================================
+     INVOICE LOGO BOUNDING BOX SETTINGS
+     Edit these values to easily resize or 
+     reposition your custom/default logo!
+  ========================================= */
+  --invoice-logo-width: 316px;
+  --invoice-logo-height: auto;
+  --invoice-logo-top: 18px;
+  --invoice-logo-left: 43px;
+}
+
 .invoice-workspace {
   min-height: 0;
   height: 100%;
@@ -222,10 +234,15 @@ textarea {
 .invoice-logo {
   position: absolute;
   z-index: 2;
-  top: 18px;
-  left: 43px;
-  width: 316px;
-  height: auto;
+  top: var(--invoice-logo-top);
+  left: var(--invoice-logo-left);
+  width: var(--invoice-logo-width);
+  height: var(--invoice-logo-height);
+}
+
+.invoice-logo svg {
+  width: 100%;
+  height: 100%;
 }
 
 .invoice-designs-text {

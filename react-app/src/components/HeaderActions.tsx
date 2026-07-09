@@ -217,7 +217,12 @@ export function HeaderActions({
             <button type="button" className="primary-button" onClick={() => {
               const form = document.getElementById('account-form') as HTMLFormElement;
               if (form) {
-                form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                if (typeof form.requestSubmit === 'function') {
+                  form.requestSubmit();
+                } else {
+                  form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                }
+                setIsEditingAccount?.(false);
               }
             }}>
               <StudioIcon name="save" />
