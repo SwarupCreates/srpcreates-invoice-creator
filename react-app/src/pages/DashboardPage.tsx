@@ -1,8 +1,11 @@
-import { useState, useMemo } from 'react'
-import { StudioIcon, formatTotal } from './shared'
+import { useState, useMemo, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { StudioIcon, formatTotal, exportInvoiceToPdf } from './shared'
 import { useFinance } from '../context/FinanceContext'
 import { InvoicePillRow } from '../components/InvoicePillRow'
 import { IncomeChartCard } from '../components/IncomeChartCard'
+import { InvoicePreview } from '../components/InvoicePreview'
+import { invoiceApi } from '../api/invoiceApi'
 import type { Invoice } from '../api/types'
 
 export type DashboardLineItem = {
@@ -11,6 +14,31 @@ export type DashboardLineItem = {
 }
 
 // We will use a state variable for this instead of a constant.
+
+function getDynamicScale(value: number, benchmark: number) {
+  const step = benchmark / 2;
+  if (value <= benchmark || step === 0) {
+    return {
+      min: 0,
+      max: benchmark,
+      scale: ['0L', `${(step / 100000).toFixed(1).replace(/\.0$/, '')}L`, `${(benchmark / 100000).toFixed(1).replace(/\.0$/, '')}L`]
+    };
+  }
+  const diff = value - benchmark;
+  const stepsToShift = Math.floor(diff / step) + 1;
+  const newMax = benchmark + (stepsToShift * step);
+  const mid = newMax - step;
+  const newMin = mid - step;
+  return {
+    min: newMin,
+    max: newMax,
+    scale: [
+      `${(newMin / 100000).toFixed(1).replace(/\.0$/, '')}L`, 
+      `${(mid / 100000).toFixed(1).replace(/\.0$/, '')}L`, 
+      `${(newMax / 100000).toFixed(1).replace(/\.0$/, '')}L`
+    ]
+  };
+}
 
 // Shared utility to calculate color based on value vs benchmark
 function getProgressAccent(value: number, benchmark: number): 'red' | 'orange' | 'gold' | 'green' {
@@ -25,6 +53,7 @@ function DashboardMetricCard({
   title,
   icon,
   value,
+  min = 0,
   max,
   accent,
   scale,
@@ -37,6 +66,7 @@ function DashboardMetricCard({
   title: string
   icon: string
   value: number
+  min?: number
   max: number
   accent: 'red' | 'orange' | 'gold' | 'green'
   scale: string[]
@@ -46,7 +76,8 @@ function DashboardMetricCard({
   itemAccent: 'red' | 'orange' | 'gold' | 'green' | 'muted'
   listClassName?: string
 }) {
-  const progress = max > 0 ? Math.min((value / max) * 100, 100) : 0
+  const range = max - min;
+  const progress = range > 0 ? Math.max(0, Math.min(((value - min) / range) * 100, 100)) : 0;
 
   return (
     <article className="metric-card">
@@ -136,7 +167,7 @@ function RecentPendingInvoices({ invoices, onOpenInvoice, onDismiss }: { invoice
                 key={inv.id}
                 invoice={inv} 
                 onMarkFulfilled={onDismiss} 
-                onClick={onOpenInvoice} 
+                onView={onOpenInvoice} 
               />
             ))}
           </div>
@@ -192,6 +223,11 @@ export function DashboardPage({
 }) {
   // Using a state to manage which invoice is being viewed in the modal
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const navigate = useNavigate();
   
   // Benchmark state
   const [monthlyBenchmark, setMonthlyBenchmark] = useState<number>(() => {
@@ -200,7 +236,7 @@ export function DashboardPage({
   });
   const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false);
 
-  const { invoices, markInvoicePaid } = useFinance();
+  const { invoices, markInvoicePaid, customers } = useFinance();
 
   const filteredInvoices = useMemo(() => {
     let result = invoices;
@@ -240,19 +276,43 @@ export function DashboardPage({
     await markInvoicePaid(id);
   };
 
+  const handleViewClick = async (id: string) => {
+    setSelectedInvoiceId(id);
+    setIsPreviewLoading(true);
+    const res = await invoiceApi.getById(id);
+    if (res.success && res.data) {
+      setPreviewInvoice(res.data);
+    } else {
+      alert("Failed to load invoice details: " + res.message);
+      setSelectedInvoiceId(null);
+    }
+    setIsPreviewLoading(false);
+  };
+
+  const handleExportPdf = async () => {
+    if (!selectedInvoiceId || !previewRef.current) return;
+    try {
+      setIsExporting(true);
+      await exportInvoiceToPdf(previewRef, selectedInvoiceId);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to export PDF');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const earningsAccent = getProgressAccent(totalEarnings, monthlyBenchmark);
   const pendingAccent = getProgressAccent(pendingAmounts, monthlyBenchmark);
   const forecastAccent = getProgressAccent(predictedTotal, monthlyBenchmark);
 
-  const halfLakh = Number(((monthlyBenchmark / 2) / 100000).toFixed(1));
-  const fullLakh = Number((monthlyBenchmark / 100000).toFixed(1));
-  const oneAndHalfLakh = Number(((monthlyBenchmark * 1.5) / 100000).toFixed(1));
+  const earningsScaleData = getDynamicScale(totalEarnings, monthlyBenchmark);
+  const pendingScaleData = getDynamicScale(pendingAmounts, monthlyBenchmark);
+  const forecastScaleData = getDynamicScale(predictedTotal, monthlyBenchmark);
 
-  const standardScale = ['0.0L', `${halfLakh}L`, `${fullLakh}L`];
-  const forecastScale = [`${halfLakh}L`, `${fullLakh}L`, `${oneAndHalfLakh}L`];
-
-  const forecastProgress = monthlyBenchmark > 0 
-    ? Math.min((predictedTotal / (monthlyBenchmark * 1.5)) * 100, 100) 
+  const forecastRange = forecastScaleData.max - forecastScaleData.min;
+  const forecastProgress = forecastRange > 0 
+    ? Math.max(0, Math.min(((predictedTotal - forecastScaleData.min) / forecastRange) * 100, 100)) 
     : 0;
   return (
     <div className="dashboard-page">
@@ -261,9 +321,10 @@ export function DashboardPage({
           title="Total Earnings"
           icon="payment_arrow_down"
           value={totalEarnings}
-          max={monthlyBenchmark}
+          min={earningsScaleData.min}
+          max={earningsScaleData.max}
           accent={earningsAccent}
-          scale={standardScale}
+          scale={earningsScaleData.scale}
           items={settledItems}
           emptyLabel="No earnings yet"
           itemIcon="check"
@@ -273,9 +334,10 @@ export function DashboardPage({
           title="Pending Amount"
           icon="sync"
           value={pendingAmounts}
-          max={monthlyBenchmark}
+          min={pendingScaleData.min}
+          max={pendingScaleData.max}
           accent={pendingAccent}
-          scale={standardScale}
+          scale={pendingScaleData.scale}
           items={pendingItems}
           emptyLabel="No pending amounts"
           itemIcon="sync"
@@ -297,7 +359,7 @@ export function DashboardPage({
               <span className={`range-fill ${forecastAccent}`} style={{ width: `${forecastProgress}%` }} />
             </div>
             <div className="range-scale">
-              {forecastScale.map((label, idx) => (
+              {forecastScaleData.scale.map((label, idx) => (
                 <span key={idx}>{label}</span>
               ))}
             </div>
@@ -309,25 +371,68 @@ export function DashboardPage({
 
       <IncomeChartCard invoices={invoices} />
 
-      <RecentPendingInvoices invoices={pendingInvoicesData} onOpenInvoice={setSelectedInvoiceId} onDismiss={handleDismissPending} />
+      <RecentPendingInvoices invoices={pendingInvoicesData} onOpenInvoice={handleViewClick} onDismiss={handleDismissPending} />
       <MoreTools onCreateInvoice={onCreateInvoice} onChangeBenchmark={() => setIsBenchmarkModalOpen(true)} />
 
       {/* MODAL OVERLAY */}
       {selectedInvoiceId && (
-        <div className="invoice-modal-backdrop" onClick={() => setSelectedInvoiceId(null)}>
-          <div className="invoice-modal-container" onClick={e => e.stopPropagation()}>
-            <header className="invoice-modal-header">
-              <h2>Invoice: {selectedInvoiceId}</h2>
-              <button className="icon-button" onClick={() => setSelectedInvoiceId(null)}>
-                <StudioIcon name="close" />
-              </button>
-            </header>
-            <div className="invoice-modal-body">
-              <div className="empty-feature" style={{ minHeight: '400px' }}>
-                <StudioIcon name="receipt_long" />
-                <h2>Invoice Preview Ready</h2>
-                <p>Modularly insert your extracted <b>&lt;InvoicePreview /&gt;</b> component here.</p>
+        <div className="invoice-modal-backdrop benchmark-modal-backdrop" onClick={() => { setSelectedInvoiceId(null); }}>
+          <div className="invoice-modal-container benchmark-modal-container" onClick={e => e.stopPropagation()} style={{ maxWidth: '900px', width: '90%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="panel-heading" style={{ padding: '16px 24px', borderBottom: '1px solid var(--line)', margin: 0 }}>
+              <div>
+                <h2>{selectedInvoiceId}</h2>
               </div>
+              <div className="modal-header-actions" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button type="button" className="secondary-button" onClick={() => { setSelectedInvoiceId(null); }}>
+                  Close
+                </button>
+                <button type="button" className="secondary-button" onClick={() => {
+                  navigate(`/invoice/edit/${selectedInvoiceId}`);
+                  setSelectedInvoiceId(null); 
+                }}>
+                  <StudioIcon name="edit" />
+                  Edit as Invoice
+                </button>
+                <button type="button" className="primary-button" onClick={handleExportPdf} disabled={isExporting || !previewInvoice}>
+                  <StudioIcon name="download" />
+                  {isExporting ? 'Exporting...' : 'Export PDF'}
+                </button>
+              </div>
+            </div>
+            
+            <div className="invoice-modal-body" style={{ padding: 0, flex: 1, overflowY: 'auto', background: 'rgba(230,230,230, 0.1)', width: '100%', display: 'block' }}>
+              {isPreviewLoading || !previewInvoice ? (
+                <div style={{ padding: '64px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <StudioIcon name="hourglass_empty" />
+                  <p>Loading invoice details...</p>
+                </div>
+              ) : (
+                (() => {
+                  const previewCustomer = customers.find(c => c.name === previewInvoice.customerName);
+                  const billingAddress = previewCustomer?.address || '';
+                  const billingLines = billingAddress.split(/\r?\n/).filter(Boolean);
+                  const contactInfo = {
+                    email: previewCustomer?.email || 'srpcreates@gmail.com',
+                    phone: previewCustomer?.phone || '9051477045',
+                    website: 'srpcreates.framer.website',
+                    pan: previewCustomer?.pan || '',
+                    gstin: previewCustomer?.gstin || ''
+                  };
+                  return (
+                    <InvoicePreview 
+                      invoiceDate={previewInvoice.date}
+                      invoiceId={previewInvoice.id}
+                      projectName={previewInvoice.projectName}
+                      customerName={previewInvoice.customerName}
+                      billingLines={billingLines}
+                      contactInfo={contactInfo}
+                      items={previewInvoice.items || []}
+                      totalAmount={previewInvoice.totalAmount}
+                      previewRef={previewRef}
+                    />
+                  )
+                })()
+              )}
             </div>
           </div>
         </div>

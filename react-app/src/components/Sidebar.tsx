@@ -26,10 +26,14 @@ export function Sidebar({ isOpen, onClose, onLogout }: { isOpen?: boolean, onClo
           <span>release-v1.0</span>
         </div>
 
-        <button type="button" className="rail-link utility" onClick={() => onClose && onClose()}>
+        <NavLink 
+          to="/account" 
+          className={({ isActive }) => `rail-link utility${isActive ? ' active' : ''}`} 
+          onClick={() => onClose && onClose()}
+        >
           <StudioIcon name="account_circle" />
           Account Manager
-        </button>
+        </NavLink>
 
         <button type="button" className="rail-link sign-out" onClick={onLogout}>
           <StudioIcon name="logout" />

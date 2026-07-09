@@ -102,6 +102,17 @@
     flex-direction: column;
   }
 
+  .modal-header-actions > button:nth-child(1),
+  .modal-header-actions > button:nth-child(2) {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .modal-header-actions > button:nth-child(3) {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
   .form-grid,
   .item-editor-head,
   .item-editor-row {

@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { Invoice, Customer } from '../api/types';
+import type { Invoice, Customer, Settings } from '../api/types';
 import { invoiceApi } from '../api/invoiceApi';
 import { customerApi } from '../api/customerApi';
+import { settingsApi } from '../api/settingsApi';
 
 type FinanceContextType = {
   invoices: Invoice[];
@@ -20,6 +21,11 @@ type FinanceContextType = {
   addCustomer: (customer: Customer) => Promise<boolean>;
   updateCustomer: (customer: Customer) => Promise<boolean>;
   deleteCustomer: (id: string) => Promise<boolean>;
+
+  settings: Settings | null;
+  isLoadingSettings: boolean;
+  refreshSettings: () => Promise<void>;
+  updateSettings: (settingsData: Partial<Settings>) => Promise<boolean>;
 };
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -30,6 +36,9 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
+
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
 
   const refreshInvoices = async () => {
     setIsLoadingInvoices(true);
@@ -210,10 +219,47 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshSettings = async () => {
+    setIsLoadingSettings(true);
+    try {
+      const response = await settingsApi.get();
+      if (response.success && response.data) {
+        setSettings(response.data);
+      } else {
+        console.error("Failed to load settings", response.message);
+      }
+    } catch (error) {
+      console.error("Error fetching settings", error);
+    } finally {
+      setIsLoadingSettings(false);
+    }
+  };
+
+  const updateSettings = async (settingsData: Partial<Settings>) => {
+    try {
+      // Optimistic update locally
+      setSettings(prev => ({ ...prev, ...settingsData }));
+      
+      const response = await settingsApi.update(settingsData);
+      if (!response.success) {
+        // Revert if failed
+        await refreshSettings();
+        alert(`Failed to update settings: ${response.message}`);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Error updating settings", error);
+      await refreshSettings(); // Revert
+      return false;
+    }
+  };
+
   useEffect(() => {
     // Initial fetch on mount
     refreshInvoices();
     refreshCustomers();
+    refreshSettings();
   }, []);
 
   return (
@@ -223,7 +269,9 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       updateInvoice,
       deleteInvoice,
       
-      customers, isLoadingCustomers, refreshCustomers, addCustomer, updateCustomer, deleteCustomer
+      customers, isLoadingCustomers, refreshCustomers, addCustomer, updateCustomer, deleteCustomer,
+
+      settings, isLoadingSettings, refreshSettings, updateSettings
     }}>
       {children}
     </FinanceContext.Provider>

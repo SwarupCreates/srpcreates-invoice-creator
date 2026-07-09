@@ -1,4 +1,6 @@
-import { type ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 import letterheadLogo from '../assets/LetterheadLogo2.svg'
 import logoMark from '../assets/LogoMark.svg'
 import signatureImage from '../assets/signature.png'
@@ -68,7 +70,8 @@ export function toInputDate(date: Date) {
 }
 
 export function getDateParts(inputDate: string) {
-  const [yyyy, mm, dd] = inputDate.split('-')
+  const cleanDate = inputDate.split('T')[0]
+  const [yyyy, mm, dd] = cleanDate.split('-')
   return { yyyy, mm, dd }
 }
 
@@ -193,4 +196,23 @@ export function renderSectionTitle(title: string, icon: string, action?: ReactNo
       {action}
     </div>
   )
+}
+
+export async function exportInvoiceToPdf(previewRef: React.RefObject<HTMLDivElement | null>, invoiceId: string) {
+  if (!previewRef.current) return
+  await document.fonts?.ready
+  const canvas = await html2canvas(previewRef.current, {
+    backgroundColor: '#ffffff',
+    logging: false,
+    scale: 3,
+    useCORS: true,
+    windowHeight: previewRef.current.scrollHeight,
+    windowWidth: previewRef.current.scrollWidth,
+  })
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
+  const pageWidth = pdf.internal.pageSize.getWidth()
+  const pageHeight = pdf.internal.pageSize.getHeight()
+
+  pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST')
+  pdf.save(`${invoiceId}.pdf`)
 }

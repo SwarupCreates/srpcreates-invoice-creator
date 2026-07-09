@@ -7,6 +7,9 @@ import type { Invoice } from '../api/types';
 import { InvoicePillRow } from '../components/InvoicePillRow';
 import { IncomeChartCard } from '../components/IncomeChartCard';
 import { useNavigate } from 'react-router-dom';
+import { InvoicePreview } from '../components/InvoicePreview';
+import { exportInvoiceToPdf } from './shared';
+import { invoiceApi } from '../api/invoiceApi';
 import '../styles/TransactionManagerPage.css';
 
 export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, isChartOpen, forceEditId, setForceEditId }: { isAddRecordOpen?: boolean, setIsAddRecordOpen?: (v: boolean) => void, isChartOpen?: boolean, forceEditId?: string, setForceEditId?: (id: string) => void }) {
@@ -21,6 +24,12 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, is
   
   const clientInputRef = useRef<HTMLDivElement>(null);
   const [clientDropdownCoords, setClientDropdownCoords] = useState({ top: 0, left: 0, width: 0 });
+
+  const [previewInvoiceId, setPreviewInvoiceId] = useState<string | null>(null);
+  const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -108,6 +117,32 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, is
     }
   };
 
+  const handleViewClick = async (id: string) => {
+    setPreviewInvoiceId(id);
+    setIsPreviewLoading(true);
+    const res = await invoiceApi.getById(id);
+    if (res.success && res.data) {
+      setPreviewInvoice(res.data);
+    } else {
+      alert("Failed to load invoice details: " + res.message);
+      setPreviewInvoiceId(null);
+    }
+    setIsPreviewLoading(false);
+  };
+  
+  const handleExportPdf = async () => {
+    if (!previewRef.current || isExporting || !previewInvoice) return;
+    setIsExporting(true);
+    try {
+      await exportInvoiceToPdf(previewRef, previewInvoice.id);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to export PDF");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleCancelEdit = () => {
     setEditingTransactionId(null);
     const nextDate = toInputDate(new Date());
@@ -163,11 +198,6 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, is
           <div className="section-label" style={{ marginBottom: '16px' }}>
             <StudioIcon name={editingTransactionId ? "edit" : "add"} />
             <span>{editingTransactionId ? "Editing Record" : "Adding New Record"}</span>
-            {editingTransactionId && (
-              <button className="icon-button" onClick={handleCancelEdit} style={{ marginLeft: 'auto', background: 'var(--panel)' }} title="Cancel Edit">
-                <StudioIcon name="close" />
-              </button>
-            )}
           </div>
           
           <form id="add-invoice-form" className="inline-add-form" onSubmit={handleSubmit}>
@@ -284,6 +314,7 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, is
                   onMarkPending={handleMarkPending}
                   onEdit={handleEditClick}
                   onDelete={(id) => setTransactionToDelete(id)}
+                  onView={handleViewClick}
                 />
               ))}
             </div>
@@ -308,6 +339,70 @@ export function TransactionManagerPage({ isAddRecordOpen, setIsAddRecordOpen, is
                   {isDeleting ? 'Deleting...' : 'Delete Record'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {previewInvoiceId && (
+        <div className="invoice-modal-backdrop benchmark-modal-backdrop" onClick={() => { setPreviewInvoiceId(null); setPreviewInvoice(null); }}>
+          <div className="invoice-modal-container benchmark-modal-container" onClick={e => e.stopPropagation()} style={{ maxWidth: '900px', width: '90%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="panel-heading" style={{ padding: '16px 24px', borderBottom: '1px solid var(--line)', margin: 0 }}>
+              <div>
+                <h2>{previewInvoiceId}</h2>
+              </div>
+              <div className="modal-header-actions" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button type="button" className="secondary-button" onClick={() => { setPreviewInvoiceId(null); setPreviewInvoice(null); }}>
+                  Close
+                </button>
+                <button type="button" className="secondary-button" onClick={() => {
+                  navigate(`/invoice/edit/${previewInvoiceId}`);
+                  setPreviewInvoiceId(null); 
+                  setPreviewInvoice(null);
+                }}>
+                  <StudioIcon name="edit" />
+                  Edit as Invoice
+                </button>
+                <button type="button" className="primary-button" onClick={handleExportPdf} disabled={isExporting || isPreviewLoading || !previewInvoice}>
+                  <StudioIcon name="download" />
+                  {isExporting ? 'Exporting...' : 'Export PDF'}
+                </button>
+              </div>
+            </div>
+            
+            <div className="invoice-modal-body" style={{ padding: 0, flex: 1, overflowY: 'auto', background: 'rgba(230,230,230, 0.1)', width: '100%', display: 'block' }}>
+              {isPreviewLoading || !previewInvoice ? (
+                <div style={{ padding: '64px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <StudioIcon name="hourglass_empty" />
+                  <p>Loading invoice details...</p>
+                </div>
+              ) : (
+                (() => {
+                  const previewCustomer = customers.find(c => c.name === previewInvoice.customerName);
+                  const billingAddress = previewCustomer?.address || '';
+                  const billingLines = billingAddress.split(/\r?\n/).filter(Boolean);
+                  const contactInfo = {
+                    email: previewCustomer?.email || 'srpcreates@gmail.com',
+                    phone: previewCustomer?.phone || '9051477045',
+                    website: 'srpcreates.framer.website',
+                    pan: previewCustomer?.pan || '',
+                    gstin: previewCustomer?.gstin || ''
+                  };
+                  return (
+                    <InvoicePreview 
+                      invoiceDate={previewInvoice.date}
+                      invoiceId={previewInvoice.id}
+                      projectName={previewInvoice.projectName}
+                      customerName={previewInvoice.customerName}
+                      billingLines={billingLines}
+                      contactInfo={contactInfo}
+                      items={previewInvoice.items || []}
+                      totalAmount={previewInvoice.totalAmount}
+                      previewRef={previewRef}
+                    />
+                  )
+                })()
+              )}
             </div>
           </div>
         </div>

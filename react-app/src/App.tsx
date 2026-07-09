@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigate, matchPath } from 'react-router-dom'
-import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
 import './App.css'
 import { DashboardPage } from './pages/DashboardPage'
 import { InvoicePage } from './pages/InvoicePage'
 import { TransactionManagerPage } from './pages/TransactionManagerPage'
 import { ClientManagerPage } from './pages/ClientManagerPage'
+import { AccountPage } from './pages/AccountPage'
 import { TopNav } from './components/TopNav'
 import { Sidebar } from './components/Sidebar'
 import { HeaderActions } from './components/HeaderActions'
@@ -22,6 +21,7 @@ import {
   type ContactInfo,
   type InvoiceItem,
   type UserProfile,
+  exportInvoiceToPdf,
 } from './pages/shared'
 import { authApi } from './api/api'
 import { invoiceApi } from './api/invoiceApi'
@@ -63,6 +63,7 @@ function App() {
   const [isAddClientOpen, setIsAddClientOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isEditingAccount, setIsEditingAccount] = useState(false)
   
   const [selectedClientId, setSelectedClientId] = useState('')
   const [saveNewClient, setSaveNewClient] = useState(true)
@@ -139,14 +140,31 @@ function App() {
 
   useEffect(() => {
     if (invoices) {
+      // Check if we are currently editing an invoice
+      const match = matchPath("/invoice/edit/:editId", location.pathname);
+      const editId = match?.params.editId;
+
+      if (editId) {
+        const originalInvoice = invoices.find(i => i.id === editId);
+        if (originalInvoice) {
+          const originalDate = toInputDate(new Date(originalInvoice.date));
+          // If the date hasn't been changed by the user, keep the original invoice ID
+          if (invoiceDate === originalDate) {
+            setInvoiceId(editId);
+            return;
+          }
+        }
+      }
+
       setInvoiceId(prev => {
-        if (prev === '' || prev.startsWith('SPR')) {
+        // Both SRP and SPR just in case of typos in existing data
+        if (prev === '' || prev.startsWith('SPR') || prev.startsWith('SRP')) {
           return formatInvoiceNumber(invoiceDate, getNextInvoiceCount(invoiceDate, invoices));
         }
         return prev;
       });
     }
-  }, [invoiceDate, invoices])
+  }, [invoiceDate, invoices, location.pathname])
 
   useEffect(() => {
     if (location.pathname.startsWith('/invoice')) {
@@ -352,22 +370,7 @@ function App() {
 
     try {
       await saveInvoiceToDb()
-
-      await document.fonts?.ready
-      const canvas = await html2canvas(previewRef.current, {
-        backgroundColor: '#ffffff',
-        logging: false,
-        scale: 3,
-        useCORS: true,
-        windowHeight: previewRef.current.scrollHeight,
-        windowWidth: previewRef.current.scrollWidth,
-      })
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
-      const pageWidth = pdf.internal.pageSize.getWidth()
-      const pageHeight = pdf.internal.pageSize.getHeight()
-
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST')
-      pdf.save(`${invoiceId}.pdf`)
+      await exportInvoiceToPdf(previewRef, invoiceId)
     } catch (error) {
       console.error("Failed to export invoice:", error)
     } finally {
@@ -393,7 +396,9 @@ function App() {
     )
   }
 
-  const currentNav = navItems.find((n) => n.path === location.pathname) || navItems[0]
+  const currentNav = location.pathname === '/account' 
+    ? { id: 'account', label: 'Account Manager', icon: 'manage_accounts', path: '/account' } 
+    : navItems.find((n) => n.path === location.pathname) || navItems[0];
 
   return (
     <main className="app-shell">
@@ -429,6 +434,8 @@ function App() {
               isAddClientOpen={isAddClientOpen}
               isChartOpen={isChartOpen}
               toggleChart={() => setIsChartOpen(prev => !prev)}
+              isEditingAccount={isEditingAccount}
+              setIsEditingAccount={setIsEditingAccount}
             />
           </header>
 
@@ -496,6 +503,7 @@ function App() {
               } />
               <Route path="/transactions" element={<TransactionManagerPage isAddRecordOpen={isAddRecordOpen} setIsAddRecordOpen={setIsAddRecordOpen} isChartOpen={isChartOpen} forceEditId={forceEditId} setForceEditId={setForceEditId} />} />
               <Route path="/clients" element={<ClientManagerPage isAddClientOpen={isAddClientOpen} setIsAddClientOpen={setIsAddClientOpen} />} />
+              <Route path="/account" element={<AccountPage isEditing={isEditingAccount} />} />
             </Routes>
           </div>
         </section>

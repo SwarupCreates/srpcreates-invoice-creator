@@ -78,9 +78,7 @@
   font-weight: 650;
 }
 
-.rail-link.utility {
-  background: var(--control);
-}
+
 
 .rail-link.sign-out {
   background: var(--red);

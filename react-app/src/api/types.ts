@@ -48,13 +48,28 @@ export type Product = {
   type: string;
 };
 
+export type PersonalInfo = {
+  name: string;
+  address: string;
+  email: string;
+  phone: string;
+  website: string;
+  pan?: string;
+  gstin?: string;
+  upiId?: string;
+};
+
+export type BankInfo = {
+  accountName: string;
+  accountNo: string;
+  bankBranch: string;
+  ifscCode: string;
+};
+
 export type Settings = {
-  bankDetails?: string[][];
-  contactInfo?: {
-    email: string;
-    phone: string;
-    website: string;
-  };
+  personalInfo?: PersonalInfo;
+  bankInfo?: BankInfo;
+  logoSvg?: string;
 };
 
 export type ApiResponse<T> = {

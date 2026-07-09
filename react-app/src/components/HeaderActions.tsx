@@ -21,6 +21,8 @@ export function HeaderActions({
   isAddClientOpen,
   isChartOpen,
   toggleChart,
+  isEditingAccount,
+  setIsEditingAccount
 }: {
   fromDate: string;
   toDate: string;
@@ -38,6 +40,8 @@ export function HeaderActions({
   isAddClientOpen?: boolean;
   isChartOpen?: boolean;
   toggleChart?: () => void;
+  isEditingAccount?: boolean;
+  setIsEditingAccount?: (val: boolean) => void;
 }) {
   const location = useLocation();
   const { invoices, refreshInvoices, isLoadingInvoices, customers, refreshCustomers, isLoadingCustomers } = useFinance();
@@ -193,6 +197,34 @@ export function HeaderActions({
           <StudioIcon name={isAddClientOpen ? "close" : "add"} />
           {isAddClientOpen ? "Close Panel" : "Add New Client"}
         </button>
+      </div>
+    );
+  }
+
+  if (location.pathname === '/account') {
+    return (
+      <div className="invoice-actions">
+        {!isEditingAccount ? (
+          <button type="button" className="secondary-button" onClick={() => setIsEditingAccount?.(true)}>
+            <StudioIcon name="edit" />
+            Edit Settings
+          </button>
+        ) : (
+          <>
+            <button type="button" className="secondary-button" onClick={() => setIsEditingAccount?.(false)}>
+              Cancel
+            </button>
+            <button type="button" className="primary-button" onClick={() => {
+              const form = document.getElementById('account-form') as HTMLFormElement;
+              if (form) {
+                form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+              }
+            }}>
+              <StudioIcon name="save" />
+              Save Settings
+            </button>
+          </>
+        )}
       </div>
     );
   }

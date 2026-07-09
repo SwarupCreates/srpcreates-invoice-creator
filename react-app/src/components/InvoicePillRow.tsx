@@ -9,7 +9,8 @@ export function InvoicePillRow({
   onMarkPending,
   onEdit,
   onDelete,
-  onClick 
+  onClick,
+  onView
 }: { 
   invoice: Invoice | { id: string, date?: string, projectName?: string, customerName?: string, totalAmount: number | string, status: string, project?: string, amount?: number | string, client?: string };
   onMarkFulfilled?: (id: string) => void;
@@ -17,6 +18,7 @@ export function InvoicePillRow({
   onEdit?: (invoice: any) => void;
   onDelete?: (id: string) => void;
   onClick?: (id: string) => void;
+  onView?: (id: string) => void;
 }) {
   const [isDismissing, setIsDismissing] = useState(false);
 
@@ -95,6 +97,12 @@ export function InvoicePillRow({
         {onEdit && (
           <button type="button" className="edit-button icon-only" onClick={(e) => { e.stopPropagation(); onEdit(invoice); }} title="Edit transaction">
             <StudioIcon name="edit" />
+          </button>
+        )}
+
+        {onView && (
+          <button type="button" className="view-button icon-only" onClick={(e) => { e.stopPropagation(); onView(invoice.id); }} title="Preview PDF">
+            <StudioIcon name="visibility" />
           </button>
         )}
 
